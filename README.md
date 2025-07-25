@@ -558,8 +558,7 @@ public class DashboardController {
         return "dashboard"; // Returns Thymeleaf template with timestamp data
     }
 }
-    }
-}
+
 ```
 
 ### View Layer Examples
