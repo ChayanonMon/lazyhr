@@ -1,0 +1,50 @@
+# Multi-stage build for AWS deployment
+FROM openjdk:17-jdk-slim AS builder
+
+WORKDIR /app
+
+# Copy gradle wrapper and build files
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY settings.gradle .
+
+# Copy source code
+COPY src src
+
+# Make gradlew executable and build
+RUN chmod +x ./gradlew && ./gradlew clean build -x test
+
+# Production stage
+FROM openjdk:17-jre-slim
+
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN adduser --disabled-password --gecos '' lazyhr
+
+WORKDIR /app
+
+# Copy JAR from builder stage
+COPY --from=builder /app/build/libs/*.jar app.jar
+
+# Create logs directory and set permissions
+RUN mkdir -p /app/logs && chown -R lazyhr:lazyhr /app
+
+# Switch to non-root user
+USER lazyhr
+
+# Health check for AWS
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:5000/actuator/health || exit 1
+
+# Expose port
+EXPOSE 5000
+
+# Set JVM options for container
+ENV JAVA_OPTS="-Xms512m -Xmx1024m -XX:+UseContainerSupport"
+ENV SPRING_PROFILES_ACTIVE=prod
+
+# Run the application
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

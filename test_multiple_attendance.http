@@ -1,0 +1,26 @@
+# Test Multiple Clock-in/Clock-out functionality
+# This file can be used with VS Code REST Client extension
+
+### Login as employee
+POST http://localhost:8080/lazyhr/login
+Content-Type: application/x-www-form-urlencoded
+
+username=jdoe&password=password123
+
+### Check dashboard (should work without unique result error)
+GET http://localhost:8080/lazyhr/dashboard
+
+### Clock in (first time)
+POST http://localhost:8080/lazyhr/attendance/clock-in
+
+### Clock out (first time)
+POST http://localhost:8080/lazyhr/attendance/clock-out
+
+### Clock in (second time - should work)
+POST http://localhost:8080/lazyhr/attendance/clock-in
+
+### Clock out (second time - should work)
+POST http://localhost:8080/lazyhr/attendance/clock-out
+
+### View attendance page (should show multiple records)
+GET http://localhost:8080/lazyhr/attendance

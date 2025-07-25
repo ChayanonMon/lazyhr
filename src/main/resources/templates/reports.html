@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reports - LazyHR</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/lazyhr/css/common.css" />
+    <link rel="stylesheet" href="/lazyhr/css/reports.css" />
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="p-4">
+        <h4 class="text-white mb-4"><i class="fas fa-users me-2"></i>LazyHR</h4>
+        <ul class="nav flex-column">
+          <li class="nav-item mb-2">
+            <a class="nav-link" th:href="@{/dashboard}">
+              <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+            </a>
+          </li>
+          <li class="nav-item mb-2">
+            <a class="nav-link" th:href="@{/attendance}">
+              <i class="fas fa-clock me-2"></i>Attendance
+            </a>
+          </li>
+          <li class="nav-item mb-2">
+            <a class="nav-link" th:href="@{/leave}">
+              <i class="fas fa-calendar-alt me-2"></i>Leave Management
+            </a>
+          </li>
+          <li
+            class="nav-item mb-2"
+            th:if="${user.role.name() == 'ADMIN' or user.role.name() == 'MANAGER'}"
+          >
+            <a class="nav-link" th:href="@{/users}">
+              <i class="fas fa-users me-2"></i>User Management
+            </a>
+          </li>
+          <li
+            class="nav-item mb-2"
+            th:if="${user.role.name() == 'ADMIN' or user.role.name() == 'MANAGER'}"
+          >
+            <a class="nav-link active" th:href="@{/reports}">
+              <i class="fas fa-chart-bar me-2"></i>Reports
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div class="mt-auto p-4">
+        <div class="d-flex align-items-center text-white mb-3">
+          <i class="fas fa-user-circle fa-2x me-3"></i>
+          <div>
+            <div
+              class="fw-bold"
+              th:text="${user != null ? (user.firstName + ' ' + user.lastName) : 'John Doe'}"
+            >
+              John Doe
+            </div>
+            <small class="text-white-50" th:text="${user != null ? user.role.name() : 'ADMIN'}"
+              >ADMIN</small
+            >
+          </div>
+        </div>
+        <a href="/lazyhr/logout" class="btn btn-outline-light btn-sm w-100">
+          <i class="fas fa-sign-out-alt me-1"></i>Logout
+        </a>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="container-fluid p-4">
+        <!-- Header -->
+        <div class="row mb-4">
+          <div class="col">
+            <h2 class="mb-0">Reports & Analytics</h2>
+            <p class="text-muted">
+              Comprehensive HR analytics and reporting dashboard
+            </p>
+          </div>
+          <div class="col-auto">
+            <div class="d-flex export-buttons">
+              <button
+                class="btn btn-outline-primary btn-sm"
+                onclick="exportReport('pdf')"
+              >
+                <i class="fas fa-file-pdf me-1"></i>Export PDF
+              </button>
+              <button
+                class="btn btn-outline-success btn-sm"
+                onclick="exportReport('excel')"
+              >
+                <i class="fas fa-file-excel me-1"></i>Export Excel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Report Filters -->
+        <div class="report-filter">
+          <div class="row">
+            <div class="col-md-3 mb-3">
+              <label for="reportType" class="form-label">Report Type</label>
+              <select
+                class="form-select"
+                id="reportType"
+                onchange="updateReport()"
+              >
+                <option value="attendance">Attendance Report</option>
+                <option value="leave">Leave Report</option>
+                <option value="productivity">Productivity Report</option>
+                <option value="employee">Employee Report</option>
+              </select>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label for="dateRange" class="form-label">Date Range</label>
+              <select
+                class="form-select"
+                id="dateRange"
+                onchange="updateReport()"
+              >
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month" selected>This Month</option>
+                <option value="quarter">This Quarter</option>
+                <option value="year">This Year</option>
+                <option value="custom">Custom Range</option>
+              </select>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label for="department" class="form-label">Department</label>
+              <select
+                class="form-select"
+                id="department"
+                onchange="updateReport()"
+              >
+                <option value="">All Departments</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Sales">Sales</option>
+                <option value="Marketing">Marketing</option>
+                <option value="HR">Human Resources</option>
+                <option value="Finance">Finance</option>
+              </select>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label for="employee" class="form-label">Employee</label>
+              <select
+                class="form-select"
+                id="employee"
+                onchange="updateReport()"
+              >
+                <option value="">All Employees</option>
+                <option
+                  th:each="emp : ${employees}"
+                  th:value="${emp.id}"
+                  th:text="${emp.firstName + ' ' + emp.lastName}"
+                >
+                  John Doe
+                </option>
+              </select>
+            </div>
+          </div>
+          <div class="row" id="customDateRange" style="display: none">
+            <div class="col-md-6 mb-3">
+              <label for="startDate" class="form-label">Start Date</label>
+              <input
+                type="date"
+                class="form-control"
+                id="startDate"
+                onchange="updateReport()"
+              />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="endDate" class="form-label">End Date</label>
+              <input
+                type="date"
+                class="form-control"
+                id="endDate"
+                onchange="updateReport()"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="report-metric metric-attendance">
+              <h3 id="attendanceRate" th:text="${attendanceRate ?: '95.2'}">
+                95.2%
+              </h3>
+              <p class="mb-0">Attendance Rate</p>
+              <small id="attendanceChange">+2.3% from last month</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="report-metric metric-leave">
+              <h3 id="leaveUtilization" th:text="${leaveUtilization ?: '68.5'}">
+                68.5%
+              </h3>
+              <p class="mb-0">Leave Utilization</p>
+              <small id="leaveChange">+5.1% from last month</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="report-metric metric-employees">
+              <h3 id="activeEmployees" th:text="${activeEmployees ?: '23'}">
+                23
+              </h3>
+              <p class="mb-0">Active Employees</p>
+              <small id="employeeChange">+2 new hires</small>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="report-metric metric-productivity">
+              <h3 id="avgHours" th:text="${avgHours ?: '8.2'}">8.2</h3>
+              <p class="mb-0">Avg Hours/Day</p>
+              <small id="hoursChange">+0.3 from last month</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row mb-4">
+          <!-- Attendance Trend Chart -->
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header bg-light">
+                <h5 class="mb-0">
+                  <i class="fas fa-chart-line me-2"></i>Attendance Trend
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="chart-container">
+                  <canvas id="attendanceChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Leave Distribution Chart -->
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header bg-light">
+                <h5 class="mb-0">
+                  <i class="fas fa-chart-pie me-2"></i>Leave Distribution
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="chart-container">
+                  <canvas id="leaveChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Department Performance -->
+        <div class="row mb-4">
+          <div class="col-md-8">
+            <div class="card">
+              <div class="card-header bg-light">
+                <h5 class="mb-0">
+                  <i class="fas fa-chart-bar me-2"></i>Department Performance
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="chart-container">
+                  <canvas id="departmentChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Stats -->
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-header bg-light">
+                <h5 class="mb-0">
+                  <i class="fas fa-info-circle me-2"></i>Quick Stats
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between">
+                    <span>On Time Arrivals</span>
+                    <strong class="text-success">87%</strong>
+                  </div>
+                  <div class="progress" style="height: 5px">
+                    <div
+                      class="progress-bar bg-success"
+                      style="width: 87%"
+                    ></div>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between">
+                    <span>Late Arrivals</span>
+                    <strong class="text-warning">10%</strong>
+                  </div>
+                  <div class="progress" style="height: 5px">
+                    <div
+                      class="progress-bar bg-warning"
+                      style="width: 10%"
+                    ></div>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between">
+                    <span>Absences</span>
+                    <strong class="text-danger">3%</strong>
+                  </div>
+                  <div class="progress" style="height: 5px">
+                    <div class="progress-bar bg-danger" style="width: 3%"></div>
+                  </div>
+                </div>
+                <hr />
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between">
+                    <span>Pending Leave Requests</span>
+                    <strong class="text-info">5</strong>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between">
+                    <span>Overtime Hours (Week)</span>
+                    <strong class="text-primary">127h</strong>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between">
+                    <span>Employee Satisfaction</span>
+                    <strong class="text-success">4.2/5</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="card">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">
+              <i class="fas fa-clock me-2"></i>Recent Activities
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <thead class="table-light">
+                  <tr>
+                    <th>Time</th>
+                    <th>Employee</th>
+                    <th>Action</th>
+                    <th>Details</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>09:15 AM</td>
+                    <td>John Doe</td>
+                    <td>Clock In</td>
+                    <td>Regular arrival</td>
+                    <td><span class="badge bg-success">On Time</span></td>
+                  </tr>
+                  <tr>
+                    <td>09:32 AM</td>
+                    <td>Jane Smith</td>
+                    <td>Leave Request</td>
+                    <td>Annual leave application</td>
+                    <td><span class="badge bg-warning">Pending</span></td>
+                  </tr>
+                  <tr>
+                    <td>10:05 AM</td>
+                    <td>Mike Johnson</td>
+                    <td>Clock In</td>
+                    <td>Late arrival</td>
+                    <td><span class="badge bg-warning">Late</span></td>
+                  </tr>
+                  <tr>
+                    <td>11:20 AM</td>
+                    <td>Sarah Wilson</td>
+                    <td>Leave Approved</td>
+                    <td>Sick leave approved</td>
+                    <td><span class="badge bg-success">Approved</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/lazyhr/js/reports.js"></script>
+  </body>
+</html>

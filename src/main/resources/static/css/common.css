@@ -1,0 +1,90 @@
+/* Common styles shared across all pages */
+
+/* Common navigation styles */
+.navbar-brand {
+  font-weight: bold;
+  color: #2c3e50 !important;
+}
+
+/* Common card styles */
+.card {
+  border: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+/* Common button styles */
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b4293 100%);
+}
+
+/* Common modal styles */
+.modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+/* Common sidebar styles for admin pages */
+.sidebar {
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: fixed;
+  width: 250px;
+  z-index: 1000;
+}
+
+.main-content {
+  margin-left: 250px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.sidebar .nav-link {
+  color: rgba(255, 255, 255, 0.8) !important;
+  transition: all 0.3s ease;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+  color: white !important;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+}
+
+/* Common utility classes */
+.hidden {
+  display: none !important;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Common status colors */
+.status-success {
+  color: #28a745;
+}
+
+.status-warning {
+  color: #ffc107;
+}
+
+.status-danger {
+  color: #dc3545;
+}
+
+.status-info {
+  color: #17a2b8;
+}

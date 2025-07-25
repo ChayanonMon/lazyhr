@@ -1,0 +1,1410 @@
+openapi: 3.1.0
+info:
+  title: LazyHR API
+  description: |
+    Human Resources Management System API
+    
+    **Note**: This API has some path ambiguity between `/api/leave/user/{userId}` and `/api/leave/{leaveId}/*` endpoints.
+    In practice, this works because:
+    - `user` is a literal string and not interpreted as a leaveId
+    - The Spring Boot framework resolves these paths correctly based on the request method and path specificity
+    
+    However, OpenAPI linting tools may flag these as ambiguous.
+  version: 1.0.0
+  contact:
+    name: LazyHR Team
+    email: support@lazyhr.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080/lazyhr
+    description: Production server
+  - url: http://localhost:8080/lazyhr
+    description: Development server
+
+tags:
+  - name: Leave Management
+    description: Operations related to leave requests and approvals
+  - name: User Management
+    description: Operations related to user creation, updates, and retrieval
+  - name: Attendance
+    description: Operations related to employee attendance tracking
+
+paths:
+  # Leave Management Endpoints - Specific paths first to avoid ambiguity
+  /api/leave/apply:
+    post:
+      tags:
+        - Leave Management
+      summary: Apply for leave
+      description: Submit a new leave request
+      operationId: applyForLeave
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestDto'
+      responses:
+        '200':
+          description: Leave application submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid input or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/leave/pending:
+    get:
+      tags:
+        - Leave Management
+      summary: Get pending leave requests
+      description: Retrieve all pending leave requests
+      operationId: getPendingLeaveRequests
+      responses:
+        '200':
+          description: Pending leave requests retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to fetch pending requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/leave/stats/pending-count:
+    get:
+      tags:
+        - Leave Management
+      summary: Get pending leave requests count
+      description: Get the count of pending leave requests
+      operationId: getPendingLeaveCount
+      responses:
+        '200':
+          description: Pending count retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to fetch pending count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/leave/user/{userId}:
+    get:
+      tags:
+        - Leave Management
+      summary: Get user's leave requests
+      description: Retrieve all leave requests for a specific user
+      operationId: getUserLeaveRequests
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: User leave requests retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LeaveRequest'
+        '400':
+          description: Failed to fetch leave requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/leave/status/{status}:
+    get:
+      tags:
+        - Leave Management
+      summary: Get leave requests by status
+      description: Retrieve leave requests filtered by status
+      operationId: getLeaveRequestsByStatus
+      parameters:
+        - name: status
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/LeaveStatus'
+      responses:
+        '200':
+          description: Leave requests retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to fetch leave requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/leave/date/{timestamp}:
+    get:
+      tags:
+        - Leave Management
+      summary: Get leave requests for a specific date
+      description: Retrieve leave requests for a specific date
+      operationId: getLeaveRequestsByDate
+      parameters:
+        - name: timestamp
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Date as Unix timestamp in milliseconds
+          example: 1721865600000
+      responses:
+        '200':
+          description: Leave requests for date retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to fetch leave requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/leave/balance/{userId}:
+    get:
+      tags:
+        - Leave Management
+      summary: Get leave balance summary
+      description: Retrieve leave balance summary for a user
+      operationId: getLeaveBalance
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: year
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 2024
+      responses:
+        '200':
+          description: Leave balance retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/LeaveBalanceSummary'
+        '400':
+          description: Failed to fetch leave balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/leave/{leaveId}:
+    get:
+      tags:
+        - Leave Management
+      summary: Get leave request by ID
+      description: Retrieve a specific leave request by its ID
+      operationId: getLeaveRequestById
+      parameters:
+        - name: leaveId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Leave request retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Leave request not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/leave/{leaveId}/approve:
+    post:
+      tags:
+        - Leave Management
+      summary: Approve leave request
+      description: Approve a pending leave request
+      operationId: approveLeaveRequest
+      parameters:
+        - name: leaveId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: approverId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: comments
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Leave request approved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid request or leave cannot be approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/leave/{leaveId}/reject:
+    post:
+      tags:
+        - Leave Management
+      summary: Reject leave request
+      description: Reject a pending leave request
+      operationId: rejectLeaveRequest
+      parameters:
+        - name: leaveId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: approverId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: comments
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Leave request rejected successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid request or leave cannot be rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/leave/{leaveId}/cancel:
+    delete:
+      tags:
+        - Leave Management
+      summary: Cancel leave request
+      description: Cancel a pending leave request
+      operationId: cancelLeaveRequest
+      parameters:
+        - name: leaveId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Leave request cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid request or leave cannot be cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  # User Management Endpoints - Specific paths first to avoid ambiguity
+  /api/users/search:
+    get:
+      tags:
+        - User Management
+      summary: Search users
+      description: Search users by query string
+      operationId: searchUsers
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query
+      responses:
+        '200':
+          description: Search results retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to search users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/users/stats:
+    get:
+      tags:
+        - User Management
+      summary: Get user statistics
+      description: Get user statistics including counts by role
+      operationId: getUserStatistics
+      responses:
+        '200':
+          description: User statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/UserStats'
+        '400':
+          description: Failed to fetch user statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/users/department/{department}:
+    get:
+      tags:
+        - User Management
+      summary: Get users by department
+      description: Retrieve users filtered by department
+      operationId: getUsersByDepartment
+      parameters:
+        - name: department
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Users by department retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to fetch users by department
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/users/role/{role}:
+    get:
+      tags:
+        - User Management
+      summary: Get users by role
+      description: Retrieve users filtered by role
+      operationId: getUsersByRole
+      parameters:
+        - name: role
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Role'
+      responses:
+        '200':
+          description: Users by role retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to fetch users by role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/users/check-username/{username}:
+    get:
+      tags:
+        - User Management
+      summary: Check username availability
+      description: Check if a username is available
+      operationId: checkUsernameAvailability
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Username availability checked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to check username
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/users/check-email/{email}:
+    get:
+      tags:
+        - User Management
+      summary: Check email availability
+      description: Check if an email is available
+      operationId: checkEmailAvailability
+      parameters:
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+            format: email
+      responses:
+        '200':
+          description: Email availability checked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to check email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/users/username/{username}:
+    get:
+      tags:
+        - User Management
+      summary: Get user by username
+      description: Retrieve a specific user by their username
+      operationId: getUserByUsername
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/users:
+    post:
+      tags:
+        - User Management
+      summary: Create new user
+      description: Create a new user in the system
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDto'
+      responses:
+        '200':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid input or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+    get:
+      tags:
+        - User Management
+      summary: Get all active users
+      description: Retrieve all active users in the system
+      operationId: getAllUsers
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to fetch users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/users/{userId}:
+    get:
+      tags:
+        - User Management
+      summary: Get user by ID
+      description: Retrieve a specific user by their ID
+      operationId: getUserById
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: User retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+    put:
+      tags:
+        - User Management
+      summary: Update user
+      description: Update an existing user's information
+      operationId: updateUser
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDto'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid input or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/users/{userId}/activate:
+    post:
+      tags:
+        - User Management
+      summary: Activate user
+      description: Activate a deactivated user
+      operationId: activateUser
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: User activated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to activate user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/users/{userId}/deactivate:
+    post:
+      tags:
+        - User Management
+      summary: Deactivate user
+      description: Deactivate an active user
+      operationId: deactivateUser
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: User deactivated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to deactivate user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/users/{userId}/password:
+    post:
+      tags:
+        - User Management
+      summary: Update user password
+      description: Update a user's password
+      operationId: updateUserPassword
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer 
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newPassword:
+                  type: string
+                  description: The new password
+              required:
+                - newPassword
+      responses:
+        '200':
+          description: Password updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to update password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  # Attendance Endpoints
+  /api/attendance/clock-in:
+    post:
+      tags:
+        - Attendance
+      summary: Clock in
+      description: Record employee clock in time
+      operationId: clockIn
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully clocked in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Clock in failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/attendance/clock-out:
+    post:
+      tags:
+        - Attendance
+      summary: Clock out
+      description: Record employee clock out time
+      operationId: clockOut
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successfully clocked out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Clock out failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/attendance/today/{userId}:
+    get:
+      tags:
+        - Attendance
+      summary: Get today's attendance
+      description: Get today's attendance record for a specific user
+      operationId: getTodayAttendance
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Today's attendance retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Attendance'
+        '400':
+          description: Failed to fetch attendance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/attendance/user/{userId}:
+    get:
+      tags:
+        - Attendance
+      summary: Get user attendance by date range
+      description: Get attendance records for a user within a date range
+      operationId: getUserAttendance
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: startTimestamp
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Start date as Unix timestamp in milliseconds
+          example: 1721865600000
+        - name: endTimestamp
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: End date as Unix timestamp in milliseconds
+          example: 1722038400000
+      responses:
+        '200':
+          description: Attendance records retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to fetch attendance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/attendance/today:
+    get:
+      tags:
+        - Attendance
+      summary: Get all attendance for today
+      description: Get today's attendance records for all users
+      operationId: getTodayAttendances
+      responses:
+        '200':
+          description: Today's attendance records retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to fetch today's attendances
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/attendance/history/{userId}:
+    get:
+      tags:
+        - Attendance
+      summary: Get user's attendance history
+      description: Get complete attendance history for a user
+      operationId: getUserAttendanceHistory
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Attendance history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to fetch attendance history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/attendance/status/{userId}:
+    get:
+      tags:
+        - Attendance
+      summary: Check if user is currently clocked in
+      description: Get current attendance status for a user
+      operationId: getAttendanceStatus
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Attendance status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/AttendanceStatus'
+        '400':
+          description: Failed to fetch attendance status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/attendance/{attendanceId}/notes:
+    put:
+      tags:
+        - Attendance
+      summary: Update attendance notes
+      description: Update notes for an attendance record
+      operationId: updateAttendanceNotes
+      parameters:
+        - name: attendanceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+              description: Notes to update
+      responses:
+        '200':
+          description: Notes updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to update notes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/attendance/{attendanceId}/break:
+    put:
+      tags:
+        - Attendance
+      summary: Update break duration
+      description: Update break duration for an attendance record
+      operationId: updateBreakDuration
+      parameters:
+        - name: attendanceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: breakMinutes
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Break duration in minutes
+      responses:
+        '200':
+          description: Break duration updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to update break duration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/attendance/stats/today:
+    get:
+      tags:
+        - Attendance
+      summary: Get attendance statistics
+      description: Get today's attendance statistics
+      operationId: getTodayStats
+      responses:
+        '200':
+          description: Today's attendance count retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Failed to fetch stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+          description: Response status
+        message:
+          type: string
+          description: Response message
+        data:
+          type: object
+          description: Response data
+      required:
+        - status
+        - message
+
+    LeaveRequestDto:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+          description: ID of the user requesting leave
+        leaveCategory:
+          $ref: '#/components/schemas/LeaveCategory'
+        leavePeriod:
+          $ref: '#/components/schemas/LeavePeriod'
+        startDate:
+          type: integer
+          format: int64
+          description: Start date of leave (Unix timestamp in milliseconds)
+          example: 1721865600000
+        endDate:
+          type: integer
+          format: int64
+          description: End date of leave (Unix timestamp in milliseconds)
+          example: 1722038400000
+        reason:
+          type: string
+          description: Reason for leave request
+        totalDays:
+          type: number
+          format: double
+          description: Total number of days requested
+      required:
+        - userId
+        - leaveCategory
+        - leavePeriod
+        - startDate
+        - endDate
+        - reason
+
+    LeaveRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        user:
+          $ref: '#/components/schemas/User'
+        leaveCategory:
+          $ref: '#/components/schemas/LeaveCategory'
+        leavePeriod:
+          $ref: '#/components/schemas/LeavePeriod'
+        startDate:
+          type: integer
+          format: int64
+          description: Start date of leave (Unix timestamp in milliseconds)
+          example: 1721865600000
+        endDate:
+          type: integer
+          format: int64
+          description: End date of leave (Unix timestamp in milliseconds)
+          example: 1722038400000
+        reason:
+          type: string
+        status:
+          $ref: '#/components/schemas/LeaveStatus'
+        appliedDate:
+          type: integer
+          format: int64
+          description: When the leave was applied (Unix timestamp in milliseconds)
+          example: 1721779200000
+        totalDays:
+          type: number
+          format: double
+        approvedBy:
+          $ref: '#/components/schemas/User'
+        approvedDate:
+          type: integer
+          format: int64
+          description: When the leave was approved/rejected (Unix timestamp in milliseconds)
+          example: 1721865600000
+          nullable: true
+        comments:
+          type: string
+
+    UserDto:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Username for login
+        password:
+          type: string
+          description: User password
+        email:
+          type: string
+          format: email
+          description: User email address
+        firstName:
+          type: string
+          description: User's first name
+        lastName:
+          type: string
+          description: User's last name
+        employeeId:
+          type: string
+          description: Employee ID
+        department:
+          type: string
+          description: Department name
+        position:
+          type: string
+          description: Job position
+        hireDate:
+          type: integer
+          format: int64
+          description: Date of hire (Unix timestamp in milliseconds)
+          example: 1609459200000
+          nullable: true
+        salary:
+          type: number
+          format: double
+          description: Employee salary
+        role:
+          $ref: '#/components/schemas/Role'
+      required:
+        - username
+        - password
+        - email
+        - firstName
+        - lastName
+        - employeeId
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        employeeId:
+          type: string
+        department:
+          type: string
+        position:
+          type: string
+        hireDate:
+          type: integer
+          format: int64
+          description: Date of hire (Unix timestamp in milliseconds)
+          example: 1609459200000
+          nullable: true
+        salary:
+          type: number
+          format: double
+        role:
+          $ref: '#/components/schemas/Role'
+        isActive:
+          type: boolean
+        createdAt:
+          type: integer
+          format: int64
+          description: User creation timestamp (Unix timestamp in milliseconds)
+          example: 1709251200000
+        updatedAt:
+          type: integer
+          format: int64
+          description: User last update timestamp (Unix timestamp in milliseconds)
+          example: 1721779200000
+
+    Attendance:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        user:
+          $ref: '#/components/schemas/User'
+        attendanceDate:
+          type: integer
+          format: int64
+          description: Attendance date (Unix timestamp in milliseconds)
+          example: 1721865600000
+        clockInTime:
+          type: integer
+          format: int64
+          description: Clock in time (Unix timestamp in milliseconds)
+          example: 1721822400000
+          nullable: true
+        clockOutTime:
+          type: integer
+          format: int64
+          description: Clock out time (Unix timestamp in milliseconds)
+          example: 1721851200000
+          nullable: true
+        totalHours:
+          type: number
+          format: double
+        status:
+          type: string
+          enum: [PRESENT, ABSENT, LATE, HALF_DAY]
+
+    LeaveBalanceSummary:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        year:
+          type: integer
+        annualLeaveAllocated:
+          type: integer
+        annualLeaveUsed:
+          type: integer
+        sickLeaveAllocated:
+          type: integer
+        sickLeaveUsed:
+          type: integer
+        privateLeaveAllocated:
+          type: integer
+        privateLeaveUsed:
+          type: integer
+
+    LeaveCategory:
+      type: string
+      enum:
+        - ANNUAL
+        - SICK
+        - SPECIAL_HOLIDAY
+        - PRIVATE
+      description: Type of leave being requested
+
+    LeavePeriod:
+      type: string
+      enum:
+        - FULL_DAY
+        - AM
+        - PM
+      description: Period of leave (full day, morning, or afternoon)
+
+    LeaveStatus:
+      type: string
+      enum:
+        - PENDING
+        - APPROVED
+        - REJECTED
+        - CANCELLED
+      description: Current status of the leave request
+
+    Role:
+      type: string
+      enum:
+        - ADMIN
+        - MANAGER
+        - EMPLOYEE
+      description: User role in the system
+
+    UserStats:
+      type: object
+      properties:
+        totalActiveUsers:
+          type: integer
+          format: int64
+          description: Total number of active users
+        adminCount:
+          type: integer
+          format: int64
+          description: Number of admin users
+        managerCount:
+          type: integer
+          format: int64
+          description: Number of manager users
+        employeeCount:
+          type: integer
+          format: int64
+          description: Number of employee users
+
+    AttendanceStatus:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+          description: User ID
+        isClockedIn:
+          type: boolean
+          description: Whether the user is currently clocked in
+        activeAttendance:
+          $ref: '#/components/schemas/Attendance'
+          nullable: true
+          description: Current active attendance record if clocked in
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
