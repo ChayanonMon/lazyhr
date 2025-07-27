@@ -4,6 +4,8 @@ import com.example.lazyhr.model.LeaveRequest;
 import com.example.lazyhr.model.LeaveStatus;
 import com.example.lazyhr.service.LeaveService;
 import com.example.lazyhr.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +16,8 @@ import java.util.List;
 @RequestMapping("/api/leave")
 @CrossOrigin(origins = "*")
 public class LeaveController {
+
+    private static final Logger logger = LoggerFactory.getLogger(LeaveController.class);
 
     @Autowired
     private LeaveService leaveService;
@@ -27,13 +31,11 @@ public class LeaveController {
     @PostMapping("/apply")
     public ResponseEntity<?> applyLeave(@RequestBody LeaveRequestDto leaveRequestDto) {
         try {
-            System.out.println("Received leave request: " + leaveRequestDto);
-            System.out.println("User ID: " + leaveRequestDto.getUserId());
-            System.out.println("Leave Category: " + leaveRequestDto.getLeaveCategory());
-            System.out.println("Leave Period: " + leaveRequestDto.getLeavePeriod());
-            System.out.println("Start Date: " + leaveRequestDto.getStartDate());
-            System.out.println("End Date: " + leaveRequestDto.getEndDate());
-            System.out.println("Reason: " + leaveRequestDto.getReason());
+            logger.debug("Received leave request: {}", leaveRequestDto);
+            logger.debug("User ID: {}, Category: {}, Period: {}", 
+                    leaveRequestDto.getUserId(), 
+                    leaveRequestDto.getLeaveCategory(), 
+                    leaveRequestDto.getLeavePeriod());
 
             // Convert DTO to entity
             LeaveRequest leaveRequest = new LeaveRequest();
@@ -44,20 +46,18 @@ public class LeaveController {
             leaveRequest.setEndDate(leaveRequestDto.getEndDate());
             leaveRequest.setReason(leaveRequestDto.getReason());
 
-            System.out.println("Calling leaveService.applyLeave...");
+            logger.info("Applying leave request for user ID: {}", leaveRequestDto.getUserId());
             LeaveRequest savedRequest = leaveService.applyLeave(leaveRequest);
-            System.out.println("Leave request saved successfully with ID: " + savedRequest.getId());
+            logger.info("Leave request saved successfully with ID: {}", savedRequest.getId());
 
             return ResponseEntity
                     .ok(new ApiResponse("success", "Leave application submitted successfully", savedRequest));
         } catch (IllegalArgumentException | IllegalStateException e) {
-            System.err.println("Validation error: " + e.getMessage());
-            e.printStackTrace();
+            logger.warn("Validation error in leave application: {}", e.getMessage());
             return ResponseEntity.badRequest()
                     .body(new ApiResponse("error", e.getMessage(), null));
         } catch (Exception e) {
-            System.err.println("Unexpected error: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Unexpected error in leave application", e);
             return ResponseEntity.badRequest()
                     .body(new ApiResponse("error", "Failed to apply for leave: " + e.getMessage(), null));
         }

@@ -5,12 +5,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "attendance")
@@ -53,13 +50,11 @@ public class Attendance {
     @Column(columnDefinition = "TEXT")
     private String notes;
     
-    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Long createdAt; // Unix timestamp in milliseconds
     
-    @UpdateTimestamp
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Long updatedAt; // Unix timestamp in milliseconds
     
     // Helper methods
     public boolean isClockedIn() {
@@ -92,5 +87,18 @@ public class Attendance {
             return totalHours + " hours";
         }
         return "N/A";
+    }
+    
+    // JPA lifecycle methods for timestamp handling
+    @PrePersist
+    protected void onCreate() {
+        long now = System.currentTimeMillis();
+        createdAt = now;
+        updatedAt = now;
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = System.currentTimeMillis();
     }
 }

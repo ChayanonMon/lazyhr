@@ -1184,6 +1184,16 @@ components:
           nullable: true
         comments:
           type: string
+        createdAt:
+          type: integer
+          format: int64
+          description: Leave request creation timestamp (Unix timestamp in milliseconds)
+          example: 1721779200000
+        updatedAt:
+          type: integer
+          format: int64
+          description: Leave request last update timestamp (Unix timestamp in milliseconds)
+          example: 1721779200000
 
     UserDto:
       type: object
@@ -1309,6 +1319,26 @@ components:
         status:
           type: string
           enum: [PRESENT, ABSENT, LATE, HALF_DAY]
+        breakDurationMinutes:
+          type: integer
+          description: Break duration in minutes
+        overtimeHours:
+          type: number
+          format: double
+          description: Overtime hours calculated
+        notes:
+          type: string
+          description: Additional notes for the attendance record
+        createdAt:
+          type: integer
+          format: int64
+          description: Attendance record creation timestamp (Unix timestamp in milliseconds)
+          example: 1721779200000
+        updatedAt:
+          type: integer
+          format: int64
+          description: Attendance record last update timestamp (Unix timestamp in milliseconds)
+          example: 1721779200000
 
     LeaveBalanceSummary:
       type: object

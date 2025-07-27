@@ -5,11 +5,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -60,13 +57,11 @@ public class User {
     @Column(nullable = false)
     private Role role = Role.EMPLOYEE;
     
-    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Long createdAt; // Unix timestamp in milliseconds
     
-    @UpdateTimestamp
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Long updatedAt; // Unix timestamp in milliseconds
     
     // One-to-many relationships
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -85,5 +80,18 @@ public class User {
     // Helper method for display
     public String getDisplayName() {
         return getFullName() + " (" + employeeId + ")";
+    }
+    
+    // JPA lifecycle methods for timestamp handling
+    @PrePersist
+    protected void onCreate() {
+        long now = System.currentTimeMillis();
+        createdAt = now;
+        updatedAt = now;
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = System.currentTimeMillis();
     }
 }

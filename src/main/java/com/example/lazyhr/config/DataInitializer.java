@@ -2,6 +2,8 @@ package com.example.lazyhr.config;
 
 import com.example.lazyhr.model.*;
 import com.example.lazyhr.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -12,6 +14,8 @@ import java.time.ZoneId;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
+
+    private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
 
     @Autowired
     private UserService userService;
@@ -141,13 +145,13 @@ public class DataInitializer implements CommandLineRunner {
             inactiveEmployee2.setActive(false); // Inactive user
             userService.createUser(inactiveEmployee2);
 
-            System.out.println("Sample users created successfully!");
-            System.out.println("Admin credentials: admin / admin123");
-            System.out.println("Manager credentials: manager / manager123");
-            System.out.println("Employee credentials: jdoe / password123");
+            logger.info("Sample users created successfully!");
+            logger.info("Admin credentials: admin / admin123");
+            logger.info("Manager credentials: manager / manager123");
+            logger.info("Employee credentials: jdoe / password123");
 
         } catch (Exception e) {
-            System.err.println("Error creating sample users: " + e.getMessage());
+            logger.error("Error creating sample users: {}", e.getMessage(), e);
             e.printStackTrace();
         }
     }

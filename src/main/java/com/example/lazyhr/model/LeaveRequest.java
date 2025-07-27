@@ -5,11 +5,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -56,8 +53,7 @@ public class LeaveRequest {
     private LeaveStatus status = LeaveStatus.PENDING;
     
     @Column(name = "applied_date")
-    @CreationTimestamp
-    private LocalDateTime appliedDate;
+    private Long appliedDate; // Unix timestamp in milliseconds
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by")
@@ -69,13 +65,11 @@ public class LeaveRequest {
     @Column(columnDefinition = "TEXT")
     private String comments;
     
-    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Long createdAt; // Unix timestamp in milliseconds
     
-    @UpdateTimestamp
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Long updatedAt; // Unix timestamp in milliseconds
     
     // Helper methods
     public void calculateTotalDays() {
@@ -128,5 +122,21 @@ public class LeaveRequest {
             case REJECTED: return "badge-danger";
             default: return "badge-secondary";
         }
+    }
+    
+    // JPA lifecycle methods for timestamp handling
+    @PrePersist
+    protected void onCreate() {
+        long now = System.currentTimeMillis();
+        createdAt = now;
+        updatedAt = now;
+        if (appliedDate == null) {
+            appliedDate = now;
+        }
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = System.currentTimeMillis();
     }
 }

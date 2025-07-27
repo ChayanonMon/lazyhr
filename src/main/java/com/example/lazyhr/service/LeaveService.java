@@ -161,8 +161,6 @@ public class LeaveService {
      */
     @Transactional(readOnly = true)
     public List<LeaveRequest> getLeaveRequestsForTimestamp(Long timestamp) {
-        // Convert timestamp to LocalDate for repository call
-        LocalDate date = Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDate();
         return leaveRequestRepository.findLeaveRequestsForTimestamp(timestamp);
     }
 
@@ -254,7 +252,8 @@ public class LeaveService {
      */
     @Transactional(readOnly = true)
     public LeaveBalanceSummary getLeaveBalanceSummary(Long userId, int year) {
-        User user = userRepository.findById(userId)
+        // Validate user exists
+        userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
 
         LeaveBalanceSummary summary = new LeaveBalanceSummary();
