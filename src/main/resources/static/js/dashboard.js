@@ -11,24 +11,7 @@ function initializeClockInButton() {
   const clockInBtn = document.getElementById(DomElements.CLOCK_IN_BTN);
   if (clockInBtn) {
     clockInBtn.addEventListener(EventTypes.CLICK, function () {
-      fetch(`${ApiEndpoints.CLOCK_IN}${userId}`, {
-        method: HttpMethods.POST,
-        headers: {
-          "Content-Type": ContentTypes.APPLICATION_JSON,
-        },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.status === HttpStatus.SUCCESS) {
-            alert(Messages.SUCCESSFULLY_CLOCKED_IN);
-            location.reload();
-          } else {
-            alert(Messages.ERROR_PREFIX + data.message);
-          }
-        })
-        .catch((error) => {
-          alert(Messages.ERROR_CLOCKING_IN_PREFIX + error.message);
-        });
+      ApiUtils.clockIn(userId);
     });
   }
 }
@@ -38,24 +21,7 @@ function initializeClockOutButton() {
   const clockOutBtn = document.getElementById(DomElements.CLOCK_OUT_BTN);
   if (clockOutBtn) {
     clockOutBtn.addEventListener(EventTypes.CLICK, function () {
-      fetch(`${ApiEndpoints.CLOCK_OUT}${userId}`, {
-        method: HttpMethods.POST,
-        headers: {
-          "Content-Type": ContentTypes.APPLICATION_JSON,
-        },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.status === HttpStatus.SUCCESS) {
-            alert(Messages.SUCCESSFULLY_CLOCKED_OUT);
-            location.reload();
-          } else {
-            alert(Messages.ERROR_PREFIX + data.message);
-          }
-        })
-        .catch((error) => {
-          alert(Messages.ERROR_CLOCKING_OUT_PREFIX + error.message);
-        });
+      ApiUtils.clockOut(userId);
     });
   }
 }
@@ -76,29 +42,24 @@ function initializeLeaveForm() {
         reason: document.getElementById(DomElements.REASON).value,
       };
 
-      fetch(ApiEndpoints.LEAVE_APPLY, {
+      ApiUtils.makeRequest(ApiEndpoints.LEAVE_APPLY, {
         method: HttpMethods.POST,
-        headers: {
-          "Content-Type": ContentTypes.APPLICATION_JSON,
-        },
-        body: JSON.stringify(leaveData),
+        body: JSON.stringify(leaveData)
       })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.status === HttpStatus.SUCCESS) {
-            alert(Messages.LEAVE_APPLICATION_SUBMITTED);
+      .then(data => {
+        ApiUtils.handleResponse(data,
+          () => {
+            NotificationSystem.showSuccess(Messages.LEAVE_APPLICATION_SUBMITTED);
             document.getElementById(DomElements.LEAVE_FORM).reset();
-            bootstrap.Modal.getInstance(
-              document.getElementById(DomElements.LEAVE_MODAL)
-            ).hide();
+            ModalUtils.hide(DomElements.LEAVE_MODAL);
             location.reload();
-          } else {
-            alert(Messages.ERROR_PREFIX + data.message);
-          }
-        })
-        .catch((error) => {
-          alert(Messages.ERROR_SUBMITTING_LEAVE + error.message);
-        });
+          },
+          (error) => NotificationSystem.showError(Messages.ERROR_PREFIX + error)
+        );
+      })
+      .catch(error => {
+        NotificationSystem.showError(Messages.ERROR_SUBMITTING_LEAVE + error.message);
+      });
     });
   }
 }

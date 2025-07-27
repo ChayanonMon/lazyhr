@@ -79,8 +79,8 @@ function initializeLeaveForm() {
     leaveForm.addEventListener(EventTypes.SUBMIT, function (e) {
       e.preventDefault();
 
-      const formData = new FormData(this);
-      const data = Object.fromEntries(formData);
+      // Use common form utilities
+      const data = FormUtils.getFormData(this);
 
       // Add calculated total days and userId
       data.totalDays = parseFloat(
@@ -88,12 +88,12 @@ function initializeLeaveForm() {
       );
       data.userId = userId;
 
-      // Convert dates to Unix timestamps (milliseconds)
+      // Convert dates to Unix timestamps (milliseconds) using common utilities
       if (data.startDate) {
-        data.startDate = dateToTimestamp(data.startDate);
+        data.startDate = DateTimeUtils.dateToTimestamp(data.startDate);
       }
       if (data.endDate) {
-        data.endDate = dateToTimestamp(data.endDate);
+        data.endDate = DateTimeUtils.dateToTimestamp(data.endDate);
       }
 
       // Debug: Log the data being sent
@@ -104,51 +104,41 @@ function initializeLeaveForm() {
         ? `${ApiEndpoints.LEAVE_UPDATE}${data.leaveId}/update`
         : ApiEndpoints.LEAVE_APPLY;
 
-      fetch(url, {
+      // Use common API utilities
+      ApiUtils.makeRequest(url, {
         method: isEdit ? HttpMethods.PUT : HttpMethods.POST,
-        headers: {
-          "Content-Type": ContentTypes.APPLICATION_JSON,
-        },
-        body: JSON.stringify(data),
+        body: JSON.stringify(data)
       })
-        .then((response) => {
-          console.log(Messages.RESPONSE_STATUS, response.status);
-          return response.json();
-        })
-        .then((data) => {
-          console.log(Messages.RESPONSE_DATA, data);
-          if (data.status === HttpStatus.SUCCESS) {
-            alert(Messages.LEAVE_REQUEST_SUBMITTED);
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(
-              document.getElementById(DomElements.APPLY_LEAVE_MODAL)
-            );
-            if (modal) {
-              modal.hide();
-            }
+      .then(responseData => {
+        console.log(Messages.RESPONSE_DATA, responseData);
+        ApiUtils.handleResponse(responseData,
+          (successData) => {
+            // Success handler
+            NotificationSystem.showSuccess(Messages.LEAVE_REQUEST_SUBMITTED);
+            // Close modal using common utilities
+            ModalUtils.hide(DomElements.APPLY_LEAVE_MODAL);
             // Clear form
-            document.getElementById(DomElements.LEAVE_FORM).reset();
-            document.getElementById(DomElements.TOTAL_DAYS).textContent = Messages.DEFAULT_TOTAL_DAYS;
+            resetForm();
             // Refresh the leave requests table
             refreshLeaveRequestsTable();
-          } else {
-            alert(
-              Messages.ERROR_PREFIX + (data.message || Messages.FAILED_TO_SUBMIT_LEAVE_REQUEST)
-            );
+          },
+          (errorMessage) => {
+            // Error handler
+            NotificationSystem.showError(Messages.ERROR_PREFIX + (errorMessage || Messages.FAILED_TO_SUBMIT_LEAVE_REQUEST));
           }
-        })
-        .catch((error) => {
-          console.error(Messages.ERROR_PREFIX, error);
-          alert(Messages.ERROR_SUBMITTING_LEAVE + error.message);
-        });
+        );
+      })
+      .catch((error) => {
+        console.error(Messages.ERROR_PREFIX, error);
+        NotificationSystem.showError(Messages.ERROR_SUBMITTING_LEAVE + error.message);
+      });
     });
   }
 }
 
 // Refresh leave requests table
 function refreshLeaveRequestsTable() {
-  fetch(ApiEndpoints.LEAVE_USER + userId)
-    .then((response) => response.json())
+  ApiUtils.makeRequest(ApiEndpoints.LEAVE_USER + userId)
     .then((data) => {
       console.log(Messages.REFRESH_TABLE_RESPONSE, data);
 
@@ -190,30 +180,11 @@ function updateLeaveRequestsTable(leaveRequests) {
     .map((leave) => {
       const statusClass =
         Messages.STATUS_CLASS_PREFIX + (leave.status || Messages.PENDING_LOWERCASE).toLowerCase();
-      const appliedDate = new Date(leave.appliedDate).toLocaleDateString(
-        Messages.EN_US_LOCALE,
-        {
-          year: Messages.NUMERIC_YEAR,
-          month: Messages.SHORT_MONTH,
-          day: Messages.TWO_DIGIT_DAY,
-        }
-      );
-      const startDate = new Date(leave.startDate).toLocaleDateString(
-        Messages.EN_US_LOCALE,
-        {
-          year: Messages.NUMERIC_YEAR,
-          month: Messages.SHORT_MONTH,
-          day: Messages.TWO_DIGIT_DAY,
-        }
-      );
-      const endDate = new Date(leave.endDate).toLocaleDateString(
-        Messages.EN_US_LOCALE,
-        {
-          year: Messages.NUMERIC_YEAR,
-          month: Messages.SHORT_MONTH,
-          day: Messages.TWO_DIGIT_DAY,
-        }
-      );
+      
+      // Use common date formatting utilities
+      const appliedDate = DateTimeUtils.formatDate(leave.appliedDate);
+      const startDate = DateTimeUtils.formatDate(leave.startDate);
+      const endDate = DateTimeUtils.formatDate(leave.endDate);
 
       return `
         <tr>
@@ -261,13 +232,12 @@ function viewLeave(id) {
 }
 
 function editLeave(id) {
-  // Fetch leave request details
-  fetch(ApiEndpoints.LEAVE_CANCEL + id)
-    .then((response) => response.json())
+  // Fetch leave request details using common API utilities
+  ApiUtils.makeRequest(ApiEndpoints.LEAVE_CANCEL + id)
     .then((data) => {
       const leave = data.data || data;
       if (!leave) {
-        alert(Messages.LEAVE_REQUEST_NOT_FOUND);
+        NotificationSystem.showError(Messages.LEAVE_REQUEST_NOT_FOUND);
         return;
       }
 
@@ -276,26 +246,23 @@ function editLeave(id) {
         Messages.MODAL_TITLE_SELECTOR
       ).textContent = Messages.EDIT_LEAVE_REQUEST;
 
-      // Populate form fields
+      // Populate form fields using common date utilities
       document.getElementById(DomElements.LEAVE_ID).value = leave.id;
       document.getElementById(DomElements.LEAVE_CATEGORY).value = leave.leaveCategory;
       document.getElementById(DomElements.LEAVE_PERIOD).value = leave.leavePeriod;
-      document.getElementById(DomElements.START_DATE).value = leave.startDate;
-      document.getElementById(DomElements.END_DATE).value = leave.endDate;
+      document.getElementById(DomElements.START_DATE).value = DateTimeUtils.formatDateForInput(leave.startDate);
+      document.getElementById(DomElements.END_DATE).value = DateTimeUtils.formatDateForInput(leave.endDate);
       document.getElementById(DomElements.REASON).value = leave.reason;
 
       // Calculate total days
       calculateTotalDays();
 
-      // Show modal
-      const modal = new bootstrap.Modal(
-        document.getElementById(DomElements.APPLY_LEAVE_MODAL)
-      );
-      modal.show();
+      // Show modal using common utilities
+      ModalUtils.show(DomElements.APPLY_LEAVE_MODAL);
     })
     .catch((error) => {
       console.error(Messages.ERROR_PREFIX, error);
-      alert(Messages.FAILED_TO_LOAD_LEAVE_DETAILS);
+      NotificationSystem.showError(Messages.FAILED_TO_LOAD_LEAVE_DETAILS);
     });
 }
 
@@ -323,86 +290,42 @@ function resetForm() {
 
 function cancelLeave(id) {
   if (confirm(Messages.CONFIRM_CANCEL_LEAVE)) {
-    fetch(ApiEndpoints.LEAVE_CANCEL_WITH_USER_ID(id, userId), {
+    // Use common API utilities for the DELETE request
+    ApiUtils.makeRequest(ApiEndpoints.LEAVE_CANCEL_WITH_USER_ID(id, userId), {
       method: HttpMethods.DELETE,
       headers: {
-        "Content-Type": ContentTypes.APPLICATION_JSON,
         [Messages.ACCEPT_HEADER]: ContentTypes.APPLICATION_JSON,
-      },
+      }
     })
-      .then((response) => {
-        console.log(Messages.CANCEL_RESPONSE_STATUS, response.status);
-        // Check if the response is ok (status in the range 200-299)
-        if (!response.ok) {
-          throw new Error(Messages.SERVER_RETURNED_STATUS + response.status);
-        }
-        return response.text().then((text) => {
-          // Try to parse as JSON if there's content, otherwise return empty object
-          return text ? JSON.parse(text) : {};
-        });
-      })
-      .then((data) => {
-        console.log(Messages.CANCEL_RESPONSE_DATA, data);
-        // Check both status and response.ok since server might return 200 with error status
-        if (
-          data.status === HttpStatus.SUCCESS ||
-          data.message === Messages.CANCELLED_STATUS ||
-          data.cancelled
-        ) {
-          alert(Messages.LEAVE_REQUEST_CANCELLED);
-          // Use our refresh function instead of full page reload
-          refreshLeaveRequestsTable();
-        } else {
-          throw new Error(data.message || Messages.UNKNOWN_ERROR_OCCURRED);
-        }
-      })
-      .catch((error) => {
-        console.error(Messages.ERROR_CANCELLING_LEAVE, error);
-        alert(Messages.ERROR_PREFIX + error.message);
-      });
+    .then((data) => {
+      console.log(Messages.CANCEL_RESPONSE_DATA, data);
+      // Check for successful cancellation
+      if (
+        data.status === HttpStatus.SUCCESS ||
+        data.message === Messages.CANCELLED_STATUS ||
+        data.cancelled
+      ) {
+        NotificationSystem.showSuccess(Messages.LEAVE_REQUEST_CANCELLED);
+        // Use our refresh function instead of full page reload
+        refreshLeaveRequestsTable();
+      } else {
+        throw new Error(data.message || Messages.UNKNOWN_ERROR_OCCURRED);
+      }
+    })
+    .catch((error) => {
+      console.error(Messages.ERROR_CANCELLING_LEAVE, error);
+      NotificationSystem.showError(Messages.ERROR_PREFIX + error.message);
+    });
   }
-}
-
-// Timestamp formatting utility
-function formatTimestamp(timestamp, format = DateTimeFormats.MMM_DD_YYYY) {
-  if (!timestamp) return "";
-  const date = new Date(timestamp);
-
-  const months = DateTimeData.MONTHS;
-
-  if (format === DateTimeFormats.MMM_DD_YYYY) {
-    return (
-      months[date.getMonth()] +
-      " " +
-      String(date.getDate()).padStart(Messages.PAD_START_LENGTH, Messages.PAD_START_STRING) +
-      ", " +
-      date.getFullYear()
-    );
-  }
-  return date.toLocaleDateString();
-}
-
-// Format all timestamps on page load
-function formatAllTimestamps() {
-  document.querySelectorAll(CssSelectors.TIMESTAMP_FORMAT).forEach((element) => {
-    const timestamp = element.getAttribute(DataAttributes.TIMESTAMP);
-    if (timestamp) {
-      element.textContent = formatTimestamp(parseInt(timestamp));
-    }
-  });
-}
-
-// Convert date string (YYYY-MM-DD) to Unix timestamp in milliseconds
-function dateToTimestamp(dateString) {
-  if (!dateString) return null;
-  const date = new Date(dateString + Messages.TIMEZONE_UTC_SUFFIX);
-  return date.getTime();
 }
 
 // Initialize everything when DOM is loaded
 document.addEventListener(EventTypes.DOM_CONTENT_LOADED, function() {
+  // Use common initialization
+  CommonInit.initializePage();
+  
+  // Initialize leave-specific functionality
   initializeDateInputs();
   initializeModalEvents();
   initializeLeaveForm();
-  formatAllTimestamps();
 });

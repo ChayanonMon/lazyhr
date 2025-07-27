@@ -5,16 +5,8 @@ document.addEventListener(EventTypes.DOM_CONTENT_LOADED, function () {
     console.log(Messages.USERS_DATA_LOADED, users.length, Messages.USERS);
   }
 
-  // Format timestamps in the table
-  formatTimestampsInTable();
-
-  // Initialize tooltips
-  var tooltipTriggerList = [].slice.call(
-    document.querySelectorAll(Bootstrap.TOOLTIP_SELECTOR)
-  );
-  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
-  });
+  // Initialize common page functionality
+  CommonInit.initializePage();
 
   // Initialize form validation
   initializeFormValidation();
@@ -28,9 +20,9 @@ let currentUserId = null;
 
 function viewUser(userId) {
   // Find user data
-  const user = findUserById(userId);
+  const user = UserUtils.findUserById(userId);
   if (!user) {
-    showAlert(Messages.USER_NOT_FOUND, HttpStatus.ERROR);
+    NotificationSystem.showError(Messages.USER_NOT_FOUND);
     return;
   }
 
@@ -38,15 +30,14 @@ function viewUser(userId) {
   populateViewModal(user);
 
   // Show modal
-  const modal = new bootstrap.Modal(document.getElementById(DomElements.VIEW_USER_MODAL));
-  modal.show();
+  ModalUtils.show(DomElements.VIEW_USER_MODAL);
 }
 
 function editUser(userId) {
   // Find user data
-  const user = findUserById(userId);
+  const user = UserUtils.findUserById(userId);
   if (!user) {
-    showAlert(Messages.USER_NOT_FOUND, HttpStatus.ERROR);
+    NotificationSystem.showError(Messages.USER_NOT_FOUND);
     return;
   }
 
@@ -57,15 +48,14 @@ function editUser(userId) {
   populateEditModal(user);
 
   // Show modal
-  const modal = new bootstrap.Modal(document.getElementById(DomElements.EDIT_USER_MODAL));
-  modal.show();
+  ModalUtils.show(DomElements.EDIT_USER_MODAL);
 }
 
 function deleteUser(userId) {
   // Find user data
-  const user = findUserById(userId);
+  const user = UserUtils.findUserById(userId);
   if (!user) {
-    showAlert(Messages.USER_NOT_FOUND, HttpStatus.ERROR);
+    NotificationSystem.showError(Messages.USER_NOT_FOUND);
     return;
   }
 
@@ -77,13 +67,11 @@ function deleteUser(userId) {
     `${user.firstName} ${user.lastName} (${user.username})`;
 
   // Show modal
-  const modal = new bootstrap.Modal(document.getElementById(DomElements.DELETE_USER_MODAL));
-  modal.show();
+  ModalUtils.show(DomElements.DELETE_USER_MODAL);
 }
 
 function editUserFromView() {
-  const viewModal = bootstrap.Modal.getInstance(document.getElementById(DomElements.VIEW_USER_MODAL));
-  viewModal.hide();
+  ModalUtils.hide(DomElements.VIEW_USER_MODAL);
   
   // Get user ID from view modal
   const userId = document.getElementById(DomElements.VIEW_USER_ID).textContent;
@@ -92,28 +80,24 @@ function editUserFromView() {
 
 function confirmDeleteUser() {
   if (!currentUserId) {
-    showAlert(Messages.NO_USER_SELECTED_FOR_DELETION, HttpStatus.ERROR);
+    NotificationSystem.showError(Messages.NO_USER_SELECTED_FOR_DELETION);
     return;
   }
 
   // Show loading state
   const deleteBtn = document.getElementById(DomElements.CONFIRM_DELETE_BTN);
-  const originalText = deleteBtn.innerHTML;
-  deleteBtn.innerHTML = HtmlContent.DELETING_SPINNER;
-  deleteBtn.disabled = true;
+  FormUtils.showLoadingState(deleteBtn, HtmlContent.DELETING_SPINNER);
 
   // Simulate API call (replace with actual API call)
   setTimeout(() => {
     // Hide modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById(DomElements.DELETE_USER_MODAL));
-    modal.hide();
+    ModalUtils.hide(DomElements.DELETE_USER_MODAL);
 
     // Reset button
-    deleteBtn.innerHTML = originalText;
-    deleteBtn.disabled = false;
+    FormUtils.resetLoadingState(deleteBtn);
 
     // Show success message
-    showAlert(Messages.USER_DELETED_SUCCESSFULLY, HttpStatus.SUCCESS);
+    NotificationSystem.showSuccess(Messages.USER_DELETED_SUCCESSFULLY);
 
     // Refresh page or remove row
     location.reload();
@@ -121,9 +105,9 @@ function confirmDeleteUser() {
 }
 
 function toggleUserStatus(userId) {
-  const user = findUserById(userId);
+  const user = UserUtils.findUserById(userId);
   if (!user) {
-    showAlert(Messages.USER_NOT_FOUND, HttpStatus.ERROR);
+    NotificationSystem.showError(Messages.USER_NOT_FOUND);
     return;
   }
 
@@ -134,23 +118,23 @@ function toggleUserStatus(userId) {
   if (confirm(confirmMessage)) {
     // Simulate API call
     const successMessage = newStatus ? Messages.USER_ACTIVATED_SUCCESSFULLY : Messages.USER_DEACTIVATED_SUCCESSFULLY;
-    showAlert(successMessage, HttpStatus.SUCCESS);
+    NotificationSystem.showSuccess(successMessage);
     // Update UI or reload
     setTimeout(() => location.reload(), Messages.TIMEOUT_1000);
   }
 }
 
 function resetUserPassword(userId) {
-  const user = findUserById(userId);
+  const user = UserUtils.findUserById(userId);
   if (!user) {
-    showAlert(Messages.USER_NOT_FOUND, HttpStatus.ERROR);
+    NotificationSystem.showError(Messages.USER_NOT_FOUND);
     return;
   }
 
   const confirmMessage = Messages.RESET_PASSWORD_CONFIRM.replace('{name}', `${user.firstName} ${user.lastName}`);
   if (confirm(confirmMessage)) {
     // Simulate API call
-    showAlert(Messages.PASSWORD_RESET_EMAIL_SENT, HttpStatus.SUCCESS);
+    NotificationSystem.showSuccess(Messages.PASSWORD_RESET_EMAIL_SENT);
   }
 }
 
@@ -177,13 +161,13 @@ function populateViewModal(user) {
   statusElement.className = `${Messages.BADGE_CLASS} ${user.isActive ? Messages.BG_SUCCESS : Messages.BG_DANGER}`;
 
   // Dates and other info
-  document.getElementById(DomElements.VIEW_HIRE_DATE).textContent = formatDate(user.hireDate) || Messages.NOT_AVAILABLE;
+  document.getElementById(DomElements.VIEW_HIRE_DATE).textContent = DateTimeUtils.formatDate(user.hireDate) || Messages.NOT_AVAILABLE;
   document.getElementById(DomElements.VIEW_SALARY).textContent = user.salary ? `${Messages.CURRENCY_DOLLAR}${parseFloat(user.salary).toLocaleString()}` : Messages.NOT_AVAILABLE;
   document.getElementById(DomElements.VIEW_LAST_LOGIN).textContent = user.lastLogin || Messages.NEVER;
 
   // Avatar
   const avatar = document.getElementById(DomElements.VIEW_USER_AVATAR);
-  avatar.textContent = getInitials(user.firstName, user.lastName);
+  avatar.textContent = UserUtils.getInitials(user.firstName, user.lastName);
 }
 
 function populateEditModal(user) {
@@ -201,7 +185,7 @@ function populateEditModal(user) {
   document.getElementById(DomElements.EDIT_POSITION).value = user.position || Messages.EMPTY_STRING;
   
   // Dates and checkboxes
-  document.getElementById(DomElements.EDIT_HIRE_DATE).value = formatDateForInput(user.hireDate) || Messages.EMPTY_STRING;
+  document.getElementById(DomElements.EDIT_HIRE_DATE).value = DateTimeUtils.formatDateForInput(user.hireDate) || Messages.EMPTY_STRING;
   document.getElementById(DomElements.EDIT_SALARY).value = user.salary || Messages.EMPTY_STRING;
   document.getElementById(DomElements.EDIT_IS_ACTIVE).checked = user.isActive !== false;
 }
@@ -229,164 +213,34 @@ function filterTable() {
     .value.toLowerCase();
   const roleFilter = document.getElementById(DomElements.ROLE_FILTER).value;
   const statusFilter = document.getElementById(DomElements.STATUS_FILTER).value;
-  const table = document.getElementById(DomElements.USERS_TABLE);
   
-  if (!table) return;
-  
-  const tbody = table.getElementsByTagName(TableStructure.TBODY_TAG)[0];
-  if (!tbody) return;
-  
-  const rows = tbody.getElementsByTagName(TableStructure.TR_TAG);
+  // Use the common table filter utility with custom filter logic
+  TableUtils.filterTable(DomElements.USERS_TABLE, DomElements.SEARCH_INPUT, 
+    [DomElements.ROLE_FILTER, DomElements.STATUS_FILTER], 
+    (row, searchTerm, filters) => {
+      const cells = row.getElementsByTagName(TableStructure.TD_TAG);
 
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const cells = row.getElementsByTagName(TableStructure.TD_TAG);
+      if (cells.length > 0) {
+        const name = cells[TableStructure.NAME_COLUMN_INDEX].textContent.toLowerCase(); // Updated for User ID column
+        const employeeId = cells[TableStructure.EMPLOYEE_ID_COLUMN_INDEX].textContent.toLowerCase();
+        const email = cells[TableStructure.EMAIL_COLUMN_INDEX].textContent.toLowerCase();
+        const role = cells[TableStructure.ROLE_COLUMN_INDEX].textContent;
+        const status = cells[TableStructure.STATUS_COLUMN_INDEX].textContent.includes(TableStructure.STATUS_ACTIVE_TEXT)
+          ? TableStructure.STATUS_TRUE
+          : TableStructure.STATUS_FALSE;
 
-    if (cells.length > 0) {
-      const name = cells[TableStructure.NAME_COLUMN_INDEX].textContent.toLowerCase(); // Updated for User ID column
-      const employeeId = cells[TableStructure.EMPLOYEE_ID_COLUMN_INDEX].textContent.toLowerCase();
-      const email = cells[TableStructure.EMAIL_COLUMN_INDEX].textContent.toLowerCase();
-      const role = cells[TableStructure.ROLE_COLUMN_INDEX].textContent;
-      const status = cells[TableStructure.STATUS_COLUMN_INDEX].textContent.includes(TableStructure.STATUS_ACTIVE_TEXT)
-        ? TableStructure.STATUS_TRUE
-        : TableStructure.STATUS_FALSE;
+        const matchesSearch =
+          name.includes(searchTerm) ||
+          employeeId.includes(searchTerm) ||
+          email.includes(searchTerm);
+        const matchesRole = !filters[DomElements.ROLE_FILTER] || role.includes(filters[DomElements.ROLE_FILTER]);
+        const matchesStatus = !filters[DomElements.STATUS_FILTER] || status === filters[DomElements.STATUS_FILTER];
 
-      const matchesSearch =
-        name.includes(searchTerm) ||
-        employeeId.includes(searchTerm) ||
-        email.includes(searchTerm);
-      const matchesRole = !roleFilter || role.includes(roleFilter);
-      const matchesStatus = !statusFilter || status === statusFilter;
-
-      if (matchesSearch && matchesRole && matchesStatus) {
-        row.style.display = TableStructure.DISPLAY_BLOCK;
-      } else {
-        row.style.display = TableStructure.DISPLAY_NONE;
+        return matchesSearch && matchesRole && matchesStatus;
       }
+      return false;
     }
-  }
-}
-
-// Utility Functions
-function findUserById(userId) {
-  if (typeof users === JavaScriptTypes.UNDEFINED || !users) {
-    console.error(Messages.USERS_DATA_NOT_AVAILABLE_CONSOLE);
-    return null;
-  }
-
-  return users.find(user => user.id == userId);
-}
-
-function getInitials(firstName, lastName) {
-  const first = firstName ? firstName.charAt(0).toUpperCase() : Messages.EMPTY_STRING;
-  const last = lastName ? lastName.charAt(0).toUpperCase() : Messages.EMPTY_STRING;
-  return first + last || Messages.QUESTION_MARKS;
-}
-
-function formatDate(dateValue) {
-  if (!dateValue) return null;
-  
-  try {
-    let date;
-    
-    // Handle timestamp (number) or date string
-    if (typeof dateValue === JavaScriptTypes.NUMBER) {
-      date = new Date(dateValue);
-    } else if (typeof dateValue === JavaScriptTypes.STRING) {
-      // If it's a string that looks like a timestamp
-      if (!isNaN(dateValue)) {
-        date = new Date(parseInt(dateValue));
-      } else {
-        date = new Date(dateValue);
-      }
-    } else {
-      return dateValue;
-    }
-    
-    // Check if date is valid
-    if (isNaN(date.getTime())) {
-      return dateValue;
-    }
-    
-    return date.toLocaleDateString(LocaleOptions.LOCALE_EN_US, LocaleOptions.DATE_FORMAT_OPTIONS);
-  } catch (e) {
-    return dateValue;
-  }
-}
-
-function formatDateForInput(dateValue) {
-  if (!dateValue) return Messages.EMPTY_STRING;
-  
-  try {
-    let date;
-    
-    // Handle timestamp (number) or date string
-    if (typeof dateValue === JavaScriptTypes.NUMBER) {
-      date = new Date(dateValue);
-    } else if (typeof dateValue === JavaScriptTypes.STRING) {
-      // If it's a string that looks like a timestamp
-      if (!isNaN(dateValue)) {
-        date = new Date(parseInt(dateValue));
-      } else {
-        date = new Date(dateValue);
-      }
-    } else {
-      return Messages.EMPTY_STRING;
-    }
-    
-    // Check if date is valid
-    if (isNaN(date.getTime())) {
-      return Messages.EMPTY_STRING;
-    }
-    
-    // Format as YYYY-MM-DD for HTML date input
-    // Use local date to avoid timezone issues
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(Messages.PAD_START_LENGTH, Messages.PAD_START_STRING);
-    const day = String(date.getDate()).padStart(Messages.PAD_START_LENGTH, Messages.PAD_START_STRING);
-    
-    return `${year}-${month}-${day}`;
-  } catch (e) {
-    return Messages.EMPTY_STRING;
-  }
-}
-
-function formatTimestampsInTable() {
-  // Find all elements with the format-timestamp class
-  const timestampElements = document.querySelectorAll(CssSelectors.FORMAT_TIMESTAMP);
-  
-  timestampElements.forEach(element => {
-    const timestamp = element.getAttribute(DataAttributes.TIMESTAMP);
-    if (timestamp && timestamp !== Messages.NOT_AVAILABLE && !isNaN(timestamp)) {
-      // Use the same formatDate function for consistency
-      const formattedDate = formatDate(parseInt(timestamp));
-      if (formattedDate) {
-        element.textContent = formattedDate;
-      }
-    }
-  });
-}
-
-function showAlert(message, type = Messages.ALERT_INFO) {
-  // Create alert element
-  const alertDiv = document.createElement(CssStyles.DIV_ELEMENT);
-  alertDiv.className = `alert alert-${type === Messages.ALERT_ERROR ? Messages.ALERT_DANGER : type} alert-dismissible fade show position-fixed`;
-  alertDiv.style.cssText = CssStyles.ALERT_POSITION;
-  
-  alertDiv.innerHTML = `
-    <i class="fas fa-${type === Messages.ALERT_SUCCESS ? IconClasses.CHECK_CIRCLE : type === Messages.ALERT_ERROR ? IconClasses.EXCLAMATION_CIRCLE : IconClasses.INFO_CIRCLE} me-2"></i>
-    ${message}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-  `;
-
-  document.body.appendChild(alertDiv);
-
-  // Auto remove after 5 seconds
-  setTimeout(() => {
-    if (alertDiv.parentNode) {
-      alertDiv.remove();
-    }
-  }, 5000);
+  );
 }
 
 // Form Handling
@@ -407,36 +261,30 @@ function initializeFormValidation() {
 function handleAddUser(event) {
   event.preventDefault();
   
-  const formData = new FormData(event.target);
-  const userData = Object.fromEntries(formData.entries());
+  const userData = FormUtils.getFormData(event.target);
   
   // Basic validation
-  if (!userData.firstName || !userData.lastName || !userData.username || !userData.email) {
-    showAlert(Messages.PLEASE_FILL_REQUIRED_FIELDS, Messages.ALERT_ERROR);
+  if (!FormUtils.validateRequiredFields(userData, ['firstName', 'lastName', 'username', 'email'])) {
     return;
   }
 
   // Show loading state
   const submitBtn = event.target.querySelector(CssSelectors.SUBMIT_BUTTON);
-  const originalText = submitBtn.innerHTML;
-  submitBtn.innerHTML = HtmlContent.ADDING_USER_SPINNER;
-  submitBtn.disabled = true;
+  FormUtils.showLoadingState(submitBtn, HtmlContent.ADDING_USER_SPINNER);
 
   // Simulate API call
   setTimeout(() => {
     // Hide modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById(DomElements.ADD_USER_MODAL));
-    modal.hide();
+    ModalUtils.hide(DomElements.ADD_USER_MODAL);
 
     // Reset form
     event.target.reset();
 
     // Reset button
-    submitBtn.innerHTML = originalText;
-    submitBtn.disabled = false;
+    FormUtils.resetLoadingState(submitBtn);
 
     // Show success message
-    showAlert(Messages.USER_ADDED_SUCCESSFULLY, Messages.ALERT_SUCCESS);
+    NotificationSystem.showSuccess(Messages.USER_ADDED_SUCCESSFULLY);
 
     // Refresh page
     setTimeout(() => location.reload(), Messages.TIMEOUT_1000);
@@ -446,8 +294,7 @@ function handleAddUser(event) {
 function handleEditUser(event) {
   event.preventDefault();
   
-  const formData = new FormData(event.target);
-  const userData = Object.fromEntries(formData.entries());
+  const userData = FormUtils.getFormData(event.target);
   
   // Get the user ID from the hidden field
   const userId = userData.userId;
@@ -471,54 +318,44 @@ function handleEditUser(event) {
   }
   
   // Basic validation
-  if (!userData.firstName || !userData.lastName || !userData.email) {
-    showAlert(Messages.PLEASE_FILL_REQUIRED_FIELDS, Messages.ALERT_ERROR);
+  if (!FormUtils.validateRequiredFields(userData, ['firstName', 'lastName', 'email'])) {
     return;
   }
 
   // Show loading state
   const submitBtn = event.target.querySelector(CssSelectors.SUBMIT_BUTTON);
-  const originalText = submitBtn.innerHTML;
-  submitBtn.innerHTML = HtmlContent.SAVING_CHANGES_SPINNER;
-  submitBtn.disabled = true;
+  FormUtils.showLoadingState(submitBtn, HtmlContent.SAVING_CHANGES_SPINNER);
 
   // Make actual API call to update user
-  fetch(ApiEndpoints.USERS_UPDATE(userId), {
+  ApiUtils.makeRequest(ApiEndpoints.USERS_UPDATE(userId), {
     method: HttpMethods.PUT,
-    headers: {
-      'Content-Type': ContentTypes.APPLICATION_JSON,
-    },
     body: JSON.stringify(userData)
   })
-  .then(response => response.json())
   .then(data => {
     // Hide modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById(DomElements.EDIT_USER_MODAL));
-    modal.hide();
+    ModalUtils.hide(DomElements.EDIT_USER_MODAL);
 
     // Reset button
-    submitBtn.innerHTML = originalText;
-    submitBtn.disabled = false;
+    FormUtils.resetLoadingState(submitBtn);
 
-    if (data.status === Messages.SUCCESS_STATUS) {
-      // Show success message
-      showAlert(Messages.USER_UPDATED_SUCCESSFULLY, Messages.ALERT_SUCCESS);
-      
-      // Refresh page to show updated data
-      setTimeout(() => location.reload(), Messages.TIMEOUT_1000);
-    } else {
-      // Show error message
-      showAlert(data.message || Messages.FAILED_TO_UPDATE_USER, Messages.ALERT_ERROR);
-    }
+    ApiUtils.handleResponse(data,
+      () => {
+        // Show success message
+        NotificationSystem.showSuccess(Messages.USER_UPDATED_SUCCESSFULLY);
+        
+        // Refresh page to show updated data
+        setTimeout(() => location.reload(), Messages.TIMEOUT_1000);
+      },
+      (error) => NotificationSystem.showError(error)
+    );
   })
   .catch(error => {
     console.error(Messages.ERROR_UPDATING_USER, error);
     
     // Reset button
-    submitBtn.innerHTML = originalText;
-    submitBtn.disabled = false;
+    FormUtils.resetLoadingState(submitBtn);
     
     // Show error message
-    showAlert(Messages.FAILED_TO_UPDATE_USER, Messages.ALERT_ERROR);
+    NotificationSystem.showError(Messages.FAILED_TO_UPDATE_USER);
   });
 }

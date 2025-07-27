@@ -127,12 +127,33 @@ function updateReport() {
   const department = document.getElementById(DomElements.DEPARTMENT).value;
   const employee = document.getElementById(DomElements.EMPLOYEE).value;
 
+  // Convert date inputs to timestamps if custom range is selected
+  let startTimestamp = null;
+  let endTimestamp = null;
+  
+  if (dateRange === Messages.CUSTOM_VALUE) {
+    const startDateInput = document.getElementById(DomElements.START_DATE);
+    const endDateInput = document.getElementById(DomElements.END_DATE);
+    
+    if (startDateInput && startDateInput.value) {
+      startTimestamp = DateTimeUtils.dateToTimestamp(startDateInput.value);
+      console.log(Messages.START_DATE_TIMESTAMP, startTimestamp);
+    }
+    
+    if (endDateInput && endDateInput.value) {
+      endTimestamp = DateTimeUtils.dateToTimestamp(endDateInput.value);
+      console.log(Messages.END_DATE_TIMESTAMP, endTimestamp);
+    }
+  }
+
   // Here you would typically make an API call to fetch updated data
   console.log(Messages.UPDATING_REPORT, {
     reportType,
     dateRange,
     department,
     employee,
+    startTimestamp,
+    endTimestamp
   });
 
   // Simulate data update
@@ -171,7 +192,7 @@ function exportReport(format) {
   const dateRange = document.getElementById(DomElements.DATE_RANGE).value;
 
   // In a real application, this would trigger a download
-  alert(
+  NotificationSystem.showInfo(
     `Exporting ${reportType} report as ${format.toUpperCase()} for ${dateRange}`
   );
 
@@ -191,43 +212,13 @@ function startRealTimeUpdates() {
   }, 30000); // Update every 30 seconds
 }
 
-// Timestamp utility functions for date range conversion
-function dateToTimestamp(dateString) {
-  if (!dateString) return null;
-  return new Date(dateString).getTime();
-}
-
-// Override the updateReport function to handle timestamp conversion
-function initializeReportUpdates() {
-  const originalUpdateReport = window.updateReport;
-  window.updateReport = function () {
-    const startDateInput = document.getElementById(DomElements.START_DATE);
-    const endDateInput = document.getElementById(DomElements.END_DATE);
-
-    // Convert dates to timestamps for API calls if needed
-    if (startDateInput && startDateInput.value) {
-      const startTimestamp = dateToTimestamp(startDateInput.value);
-      console.log(Messages.START_DATE_TIMESTAMP, startTimestamp);
-    }
-
-    if (endDateInput && endDateInput.value) {
-      const endTimestamp = dateToTimestamp(endDateInput.value);
-      console.log(Messages.END_DATE_TIMESTAMP, endTimestamp);
-    }
-
-    // Call original function if it exists
-    if (originalUpdateReport && typeof originalUpdateReport === "function") {
-      originalUpdateReport();
-    } else {
-      updateReport();
-    }
-  };
-}
-
 // Initialize everything when DOM loads
 document.addEventListener(EventTypes.DOM_CONTENT_LOADED, function () {
+  // Use common initialization
+  CommonInit.initializePage();
+  
+  // Initialize reports-specific functionality
   initializeCharts();
   initializeDateRangeHandler();
-  initializeReportUpdates();
   startRealTimeUpdates();
 });
