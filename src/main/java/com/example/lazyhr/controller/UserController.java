@@ -28,13 +28,28 @@ public class UserController {
             user.setUsername(userDto.getUsername());
             user.setPassword(userDto.getPassword());
             user.setEmail(userDto.getEmail());
-            user.setFirstName(userDto.getFirstName());
-            user.setLastName(userDto.getLastName());
+            
+            // Optional fields - only set if provided
+            if (userDto.getFirstName() != null && !userDto.getFirstName().trim().isEmpty()) {
+                user.setFirstName(userDto.getFirstName());
+            }
+            if (userDto.getLastName() != null && !userDto.getLastName().trim().isEmpty()) {
+                user.setLastName(userDto.getLastName());
+            }
+            if (userDto.getDepartment() != null && !userDto.getDepartment().trim().isEmpty()) {
+                user.setDepartment(userDto.getDepartment());
+            }
+            if (userDto.getPosition() != null && !userDto.getPosition().trim().isEmpty()) {
+                user.setPosition(userDto.getPosition());
+            }
+            if (userDto.getHireDate() != null) {
+                user.setHireDate(userDto.getHireDate());
+            }
+            if (userDto.getSalary() != null) {
+                user.setSalary(userDto.getSalary());
+            }
+            
             user.setEmployeeId(userDto.getEmployeeId());
-            user.setDepartment(userDto.getDepartment());
-            user.setPosition(userDto.getPosition());
-            user.setHireDate(userDto.getHireDate());
-            user.setSalary(userDto.getSalary());
             user.setRole(userDto.getRole() != null ? userDto.getRole() : Role.EMPLOYEE);
 
             User savedUser = userService.createUser(user);
@@ -98,14 +113,28 @@ public class UserController {
         try {
             User user = userService.findById(userId);
 
-            // Update fields from DTO
-            user.setFirstName(userDto.getFirstName());
-            user.setLastName(userDto.getLastName());
-            user.setEmail(userDto.getEmail());
-            user.setDepartment(userDto.getDepartment());
-            user.setPosition(userDto.getPosition());
-            user.setHireDate(userDto.getHireDate());
-            user.setSalary(userDto.getSalary());
+            // Update optional fields - only if provided and not empty
+            if (userDto.getFirstName() != null && !userDto.getFirstName().trim().isEmpty()) {
+                user.setFirstName(userDto.getFirstName());
+            }
+            if (userDto.getLastName() != null && !userDto.getLastName().trim().isEmpty()) {
+                user.setLastName(userDto.getLastName());
+            }
+            if (userDto.getEmail() != null && !userDto.getEmail().trim().isEmpty()) {
+                user.setEmail(userDto.getEmail());
+            }
+            if (userDto.getDepartment() != null && !userDto.getDepartment().trim().isEmpty()) {
+                user.setDepartment(userDto.getDepartment());
+            }
+            if (userDto.getPosition() != null && !userDto.getPosition().trim().isEmpty()) {
+                user.setPosition(userDto.getPosition());
+            }
+            if (userDto.getHireDate() != null) {
+                user.setHireDate(userDto.getHireDate());
+            }
+            if (userDto.getSalary() != null) {
+                user.setSalary(userDto.getSalary());
+            }
             if (userDto.getRole() != null) {
                 user.setRole(userDto.getRole());
             }

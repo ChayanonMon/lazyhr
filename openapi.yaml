@@ -1211,18 +1211,22 @@ components:
         firstName:
           type: string
           description: User's first name
+          nullable: true
         lastName:
           type: string
           description: User's last name
+          nullable: true
         employeeId:
           type: string
           description: Employee ID
         department:
           type: string
           description: Department name
+          nullable: true
         position:
           type: string
           description: Job position
+          nullable: true
         hireDate:
           type: integer
           format: int64
@@ -1233,14 +1237,13 @@ components:
           type: number
           format: double
           description: Employee salary
+          nullable: true
         role:
           $ref: '#/components/schemas/Role'
       required:
         - username
         - password
         - email
-        - firstName
-        - lastName
         - employeeId
 
     User:
@@ -1256,14 +1259,18 @@ components:
           format: email
         firstName:
           type: string
+          nullable: true
         lastName:
           type: string
+          nullable: true
         employeeId:
           type: string
         department:
           type: string
+          nullable: true
         position:
           type: string
+          nullable: true
         hireDate:
           type: integer
           format: int64
@@ -1273,6 +1280,7 @@ components:
         salary:
           type: number
           format: double
+          nullable: true
         role:
           $ref: '#/components/schemas/Role'
         isActive:

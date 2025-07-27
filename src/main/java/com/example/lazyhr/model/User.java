@@ -29,10 +29,10 @@ public class User {
     @Column(unique = true, nullable = false, length = 100)
     private String email;
     
-    @Column(name = "first_name", nullable = false, length = 50)
+    @Column(name = "first_name", length = 50)
     private String firstName;
     
-    @Column(name = "last_name", nullable = false, length = 50)
+    @Column(name = "last_name", length = 50)
     private String lastName;
     
     @Column(name = "employee_id", unique = true, nullable = false, length = 20)
@@ -74,7 +74,14 @@ public class User {
     
     // Helper method to get full name
     public String getFullName() {
-        return firstName + " " + lastName;
+        String first = firstName != null ? firstName : "";
+        String last = lastName != null ? lastName : "";
+        
+        if (first.isEmpty() && last.isEmpty()) {
+            return username; // fallback to username if no names provided
+        }
+        
+        return (first + " " + last).trim();
     }
     
     // Helper method for display
