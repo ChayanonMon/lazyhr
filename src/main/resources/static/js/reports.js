@@ -5,10 +5,10 @@ let attendanceChart, leaveChart, departmentChart;
 function initializeCharts() {
   // Attendance Trend Chart
   const attendanceCtx = document
-    .getElementById("attendanceChart")
-    .getContext("2d");
+    .getElementById(DomElements.ATTENDANCE_CHART)
+    .getContext(Messages.CANVAS_2D);
   attendanceChart = new Chart(attendanceCtx, {
-    type: "line",
+    type: Messages.CHART_LINE,
     data: {
       labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
       datasets: [
@@ -39,9 +39,9 @@ function initializeCharts() {
   });
 
   // Leave Distribution Chart
-  const leaveCtx = document.getElementById("leaveChart").getContext("2d");
+  const leaveCtx = document.getElementById(DomElements.LEAVE_CHART).getContext(Messages.CANVAS_2D);
   leaveChart = new Chart(leaveCtx, {
-    type: "doughnut",
+    type: Messages.CHART_DOUGHNUT,
     data: {
       labels: [
         "Annual Leave",
@@ -69,10 +69,10 @@ function initializeCharts() {
 
   // Department Performance Chart
   const departmentCtx = document
-    .getElementById("departmentChart")
-    .getContext("2d");
+    .getElementById(DomElements.DEPARTMENT_CHART)
+    .getContext(Messages.CANVAS_2D);
   departmentChart = new Chart(departmentCtx, {
-    type: "bar",
+    type: Messages.CHART_BAR,
     data: {
       labels: ["Engineering", "Sales", "Marketing", "HR", "Finance"],
       datasets: [
@@ -109,26 +109,26 @@ function initializeCharts() {
 
 // Initialize date range change handler
 function initializeDateRangeHandler() {
-  const dateRangeEl = document.getElementById("dateRange");
+  const dateRangeEl = document.getElementById(DomElements.DATE_RANGE);
   if (dateRangeEl) {
-    dateRangeEl.addEventListener("change", function () {
-      const customRange = document.getElementById("customDateRange");
+    dateRangeEl.addEventListener(EventTypes.CHANGE, function () {
+      const customRange = document.getElementById(DomElements.CUSTOM_DATE_RANGE);
       if (customRange) {
         customRange.style.display =
-          this.value === "custom" ? "block" : "none";
+          this.value === Messages.CUSTOM_VALUE ? Messages.BLOCK_DISPLAY : Messages.NONE_DISPLAY;
       }
     });
   }
 }
 
 function updateReport() {
-  const reportType = document.getElementById("reportType").value;
-  const dateRange = document.getElementById("dateRange").value;
-  const department = document.getElementById("department").value;
-  const employee = document.getElementById("employee").value;
+  const reportType = document.getElementById(DomElements.REPORT_TYPE).value;
+  const dateRange = document.getElementById(DomElements.DATE_RANGE).value;
+  const department = document.getElementById(DomElements.DEPARTMENT).value;
+  const employee = document.getElementById(DomElements.EMPLOYEE).value;
 
   // Here you would typically make an API call to fetch updated data
-  console.log("Updating report with:", {
+  console.log(Messages.UPDATING_REPORT, {
     reportType,
     dateRange,
     department,
@@ -155,20 +155,20 @@ function updateChartData() {
   }
 
   // Update metrics
-  const attendanceRateEl = document.getElementById("attendanceRate");
+  const attendanceRateEl = document.getElementById(DomElements.ATTENDANCE_RATE);
   if (attendanceRateEl) {
     attendanceRateEl.textContent = Math.floor(Math.random() * 10) + 90 + "%";
   }
   
-  const leaveUtilizationEl = document.getElementById("leaveUtilization");
+  const leaveUtilizationEl = document.getElementById(DomElements.LEAVE_UTILIZATION);
   if (leaveUtilizationEl) {
     leaveUtilizationEl.textContent = Math.floor(Math.random() * 20) + 60 + "%";
   }
 }
 
 function exportReport(format) {
-  const reportType = document.getElementById("reportType").value;
-  const dateRange = document.getElementById("dateRange").value;
+  const reportType = document.getElementById(DomElements.REPORT_TYPE).value;
+  const dateRange = document.getElementById(DomElements.DATE_RANGE).value;
 
   // In a real application, this would trigger a download
   alert(
@@ -187,7 +187,7 @@ function startRealTimeUpdates() {
     const timeString = now.toLocaleTimeString();
 
     // This would typically fetch real data from your API
-    console.log("Updating real-time data at", timeString);
+    console.log(Messages.UPDATING_REAL_TIME_DATA, timeString);
   }, 30000); // Update every 30 seconds
 }
 
@@ -201,18 +201,18 @@ function dateToTimestamp(dateString) {
 function initializeReportUpdates() {
   const originalUpdateReport = window.updateReport;
   window.updateReport = function () {
-    const startDateInput = document.getElementById("startDate");
-    const endDateInput = document.getElementById("endDate");
+    const startDateInput = document.getElementById(DomElements.START_DATE);
+    const endDateInput = document.getElementById(DomElements.END_DATE);
 
     // Convert dates to timestamps for API calls if needed
     if (startDateInput && startDateInput.value) {
       const startTimestamp = dateToTimestamp(startDateInput.value);
-      console.log("Start date timestamp:", startTimestamp);
+      console.log(Messages.START_DATE_TIMESTAMP, startTimestamp);
     }
 
     if (endDateInput && endDateInput.value) {
       const endTimestamp = dateToTimestamp(endDateInput.value);
-      console.log("End date timestamp:", endTimestamp);
+      console.log(Messages.END_DATE_TIMESTAMP, endTimestamp);
     }
 
     // Call original function if it exists
@@ -225,7 +225,7 @@ function initializeReportUpdates() {
 }
 
 // Initialize everything when DOM loads
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener(EventTypes.DOM_CONTENT_LOADED, function () {
   initializeCharts();
   initializeDateRangeHandler();
   initializeReportUpdates();

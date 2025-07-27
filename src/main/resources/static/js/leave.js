@@ -4,14 +4,14 @@ let userId = null;
 // Initialize user data from HTML template
 function initializeUserData(userIdValue) {
   userId = userIdValue;
-  console.log("User ID loaded:", userId);
+  console.log(Messages.USER_ID_LOADED, userId);
 }
 
 // Calculate total days when dates change
 function calculateTotalDays() {
-  const startDate = document.getElementById("startDate").value;
-  const endDate = document.getElementById("endDate").value;
-  const leavePeriod = document.getElementById("leavePeriod").value;
+  const startDate = document.getElementById(DomElements.START_DATE).value;
+  const endDate = document.getElementById(DomElements.END_DATE).value;
+  const leavePeriod = document.getElementById(DomElements.LEAVE_PERIOD).value;
 
   if (startDate && endDate) {
     const start = new Date(startDate);
@@ -22,13 +22,13 @@ function calculateTotalDays() {
       const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
 
       let totalDays = dayDiff;
-      if (leavePeriod === "AM" || leavePeriod === "PM") {
+      if (leavePeriod === LeavePeriods.AM || leavePeriod === LeavePeriods.PM) {
         totalDays = dayDiff * 0.5;
       }
 
-      document.getElementById("totalDays").textContent = totalDays;
+      document.getElementById(DomElements.TOTAL_DAYS).textContent = totalDays;
     } else {
-      document.getElementById("totalDays").textContent = "0";
+      document.getElementById(DomElements.TOTAL_DAYS).textContent = Messages.DEFAULT_TOTAL_DAYS;
     }
   }
 }
@@ -36,13 +36,13 @@ function calculateTotalDays() {
 // Initialize date inputs and event listeners
 function initializeDateInputs() {
   // Add event listeners
-  const startDateEl = document.getElementById("startDate");
-  const endDateEl = document.getElementById("endDate");
-  const leavePeriodEl = document.getElementById("leavePeriod");
+  const startDateEl = document.getElementById(DomElements.START_DATE);
+  const endDateEl = document.getElementById(DomElements.END_DATE);
+  const leavePeriodEl = document.getElementById(DomElements.LEAVE_PERIOD);
 
   if (startDateEl) {
-    startDateEl.addEventListener("change", calculateTotalDays);
-    startDateEl.addEventListener("change", function () {
+    startDateEl.addEventListener(EventTypes.CHANGE, calculateTotalDays);
+    startDateEl.addEventListener(EventTypes.CHANGE, function () {
       if (endDateEl) {
         endDateEl.min = this.value;
       }
@@ -51,32 +51,32 @@ function initializeDateInputs() {
   }
 
   if (endDateEl) {
-    endDateEl.addEventListener("change", calculateTotalDays);
+    endDateEl.addEventListener(EventTypes.CHANGE, calculateTotalDays);
   }
 
   if (leavePeriodEl) {
-    leavePeriodEl.addEventListener("change", calculateTotalDays);
+    leavePeriodEl.addEventListener(EventTypes.CHANGE, calculateTotalDays);
   }
 
   // Set minimum date to today
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split(Messages.T_SEPARATOR)[Messages.T_INDEX];
   if (startDateEl) startDateEl.min = today;
   if (endDateEl) endDateEl.min = today;
 }
 
 // Reset form when modal is closed
 function initializeModalEvents() {
-  const modal = document.getElementById("applyLeaveModal");
+  const modal = document.getElementById(DomElements.APPLY_LEAVE_MODAL);
   if (modal) {
-    modal.addEventListener("hidden.bs.modal", resetForm);
+    modal.addEventListener(EventTypes.HIDDEN_BS_MODAL, resetForm);
   }
 }
 
 // Form submission
 function initializeLeaveForm() {
-  const leaveForm = document.getElementById("leaveForm");
+  const leaveForm = document.getElementById(DomElements.LEAVE_FORM);
   if (leaveForm) {
-    leaveForm.addEventListener("submit", function (e) {
+    leaveForm.addEventListener(EventTypes.SUBMIT, function (e) {
       e.preventDefault();
 
       const formData = new FormData(this);
@@ -84,7 +84,7 @@ function initializeLeaveForm() {
 
       // Add calculated total days and userId
       data.totalDays = parseFloat(
-        document.getElementById("totalDays").textContent
+        document.getElementById(DomElements.TOTAL_DAYS).textContent
       );
       data.userId = userId;
 
@@ -97,52 +97,49 @@ function initializeLeaveForm() {
       }
 
       // Debug: Log the data being sent
-      console.log("Submitting leave request with data:", data);
+      console.log(Messages.SUBMITTING_LEAVE_REQUEST, data);
 
       const isEdit = data.leaveId && data.leaveId !== "";
       const url = isEdit
-        ? `/lazyhr/api/leave/${data.leaveId}/update`
-        : "/lazyhr/api/leave/apply";
+        ? `${ApiEndpoints.LEAVE_UPDATE}${data.leaveId}/update`
+        : ApiEndpoints.LEAVE_APPLY;
 
       fetch(url, {
-        method: isEdit ? "PUT" : "POST",
+        method: isEdit ? HttpMethods.PUT : HttpMethods.POST,
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": ContentTypes.APPLICATION_JSON,
         },
         body: JSON.stringify(data),
       })
         .then((response) => {
-          console.log("Response status:", response.status);
+          console.log(Messages.RESPONSE_STATUS, response.status);
           return response.json();
         })
         .then((data) => {
-          console.log("Response data:", data);
-          if (data.status === "success") {
-            alert("Leave request submitted successfully!");
+          console.log(Messages.RESPONSE_DATA, data);
+          if (data.status === HttpStatus.SUCCESS) {
+            alert(Messages.LEAVE_REQUEST_SUBMITTED);
             // Close modal
             const modal = bootstrap.Modal.getInstance(
-              document.getElementById("applyLeaveModal")
+              document.getElementById(DomElements.APPLY_LEAVE_MODAL)
             );
             if (modal) {
               modal.hide();
             }
             // Clear form
-            document.getElementById("leaveForm").reset();
-            document.getElementById("totalDays").textContent = "0";
+            document.getElementById(DomElements.LEAVE_FORM).reset();
+            document.getElementById(DomElements.TOTAL_DAYS).textContent = Messages.DEFAULT_TOTAL_DAYS;
             // Refresh the leave requests table
             refreshLeaveRequestsTable();
           } else {
             alert(
-              "Error: " + (data.message || "Failed to submit leave request")
+              Messages.ERROR_PREFIX + (data.message || Messages.FAILED_TO_SUBMIT_LEAVE_REQUEST)
             );
           }
         })
         .catch((error) => {
-          console.error("Error:", error);
-          alert(
-            "Failed to submit leave request. Please try again: " +
-              error.message
-          );
+          console.error(Messages.ERROR_PREFIX, error);
+          alert(Messages.ERROR_SUBMITTING_LEAVE + error.message);
         });
     });
   }
@@ -150,10 +147,10 @@ function initializeLeaveForm() {
 
 // Refresh leave requests table
 function refreshLeaveRequestsTable() {
-  fetch("/lazyhr/api/leave/user/" + userId)
+  fetch(ApiEndpoints.LEAVE_USER + userId)
     .then((response) => response.json())
     .then((data) => {
-      console.log("Refresh table response:", data);
+      console.log(Messages.REFRESH_TABLE_RESPONSE, data);
 
       // Handle different response formats
       const leaveRequests = data.data || data || [];
@@ -163,19 +160,19 @@ function refreshLeaveRequestsTable() {
         updateLeaveRequestsTable(leaveRequests);
       }
       // If success status with data property
-      else if (data.status === "success" && Array.isArray(data.data)) {
+      else if (data.status === HttpStatus.SUCCESS && Array.isArray(data.data)) {
         updateLeaveRequestsTable(data.data);
       }
       // If data is in a content property
       else if (data.content && Array.isArray(data.content)) {
         updateLeaveRequestsTable(data.content);
       } else {
-        console.error("Unexpected response format:", data);
+        console.error(Messages.UNEXPECTED_RESPONSE_FORMAT, data);
         location.reload(); // Fallback
       }
     })
     .catch((error) => {
-      console.error("Error refreshing table:", error);
+      console.error(Messages.ERROR_REFRESHING_TABLE, error);
       // Fallback to page reload if API fails
       location.reload();
     });
@@ -183,76 +180,69 @@ function refreshLeaveRequestsTable() {
 
 // Function to update the leave requests table
 function updateLeaveRequestsTable(leaveRequests) {
-  const tbody = document.querySelector(".table tbody");
+  const tbody = document.querySelector(Messages.TABLE_SELECTOR);
   if (!leaveRequests || leaveRequests.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="9" class="text-center text-muted py-4">
-          <i class="fas fa-calendar-times fa-3x mb-3 d-block"></i>
-          No leave requests found. Click "Apply for Leave" to create your first request.
-        </td>
-      </tr>
-    `;
+    tbody.innerHTML = Messages.TABLE_NO_DATA_HTML;
     return;
   }
 
   tbody.innerHTML = leaveRequests
     .map((leave) => {
       const statusClass =
-        "status-" + (leave.status || "pending").toLowerCase();
+        Messages.STATUS_CLASS_PREFIX + (leave.status || Messages.PENDING_LOWERCASE).toLowerCase();
       const appliedDate = new Date(leave.appliedDate).toLocaleDateString(
-        "en-US",
+        Messages.EN_US_LOCALE,
         {
-          year: "numeric",
-          month: "short",
-          day: "2-digit",
+          year: Messages.NUMERIC_YEAR,
+          month: Messages.SHORT_MONTH,
+          day: Messages.TWO_DIGIT_DAY,
         }
       );
       const startDate = new Date(leave.startDate).toLocaleDateString(
-        "en-US",
+        Messages.EN_US_LOCALE,
         {
-          year: "numeric",
-          month: "short",
-          day: "2-digit",
+          year: Messages.NUMERIC_YEAR,
+          month: Messages.SHORT_MONTH,
+          day: Messages.TWO_DIGIT_DAY,
         }
       );
       const endDate = new Date(leave.endDate).toLocaleDateString(
-        "en-US",
+        Messages.EN_US_LOCALE,
         {
-          year: "numeric",
-          month: "short",
-          day: "2-digit",
+          year: Messages.NUMERIC_YEAR,
+          month: Messages.SHORT_MONTH,
+          day: Messages.TWO_DIGIT_DAY,
         }
       );
 
       return `
         <tr>
           <td>${appliedDate}</td>
-          <td><span class="badge bg-info">${leave.leaveCategory}</span></td>
+          <td><span class="${Messages.BADGE_BG_INFO}">${leave.leaveCategory}</span></td>
           <td>${leave.leavePeriod}</td>
           <td>${startDate}</td>
           <td>${endDate}</td>
           <td>${leave.totalDays}</td>
-          <td><span class="leave-status ${statusClass}">${leave.status}</span></td>
+          <td><span class="${Messages.LEAVE_STATUS_CLASS} ${statusClass}">${leave.status}</span></td>
           <td>${
-            leave.reason.length > 50
-              ? leave.reason.substring(0, 50) + "..."
+            leave.reason.length > Messages.REASON_TRUNCATE_LENGTH
+              ? leave.reason.substring(0, Messages.REASON_TRUNCATE_LENGTH) + Messages.REASON_TRUNCATE_SUFFIX
               : leave.reason
           }</td>
           <td>
             ${
-              leave.status === "PENDING"
+              leave.status === Messages.PENDING_STATUS
                 ? `
-                  <button class="btn btn-sm btn-outline-primary me-1" onclick="editLeave(${leave.id})">
+                  <button class="${Messages.BTN_OUTLINE_PRIMARY}" onclick="editLeave(${leave.id})">
                     <i class="fas fa-edit"></i>
                   </button>
-                  <button class="btn btn-sm btn-outline-danger" onclick="cancelLeave(${leave.id})">
+                  <button class="${Messages.BTN_OUTLINE_DANGER}" onclick="cancelLeave(${leave.id})">
                     <i class="fas fa-times"></i>
                   </button>
                 `
                 : ""
             }
-            <button class="btn btn-sm btn-outline-info" onclick="viewLeave(${
+            <button class="${Messages.BTN_OUTLINE_INFO}" onclick="viewLeave(${
               leave.id
             })">
               <i class="fas fa-eye"></i>
@@ -267,84 +257,84 @@ function updateLeaveRequestsTable(leaveRequests) {
 // Action functions
 function viewLeave(id) {
   // Implementation for viewing leave details
-  alert("View leave details for ID: " + id);
+  alert(Messages.VIEW_LEAVE_DETAILS_PREFIX + id);
 }
 
 function editLeave(id) {
   // Fetch leave request details
-  fetch("/lazyhr/api/leave/" + id)
+  fetch(ApiEndpoints.LEAVE_CANCEL + id)
     .then((response) => response.json())
     .then((data) => {
       const leave = data.data || data;
       if (!leave) {
-        alert("Leave request not found");
+        alert(Messages.LEAVE_REQUEST_NOT_FOUND);
         return;
       }
 
       // Update modal title
       document.querySelector(
-        "#applyLeaveModal .modal-title"
-      ).textContent = "Edit Leave Request";
+        Messages.MODAL_TITLE_SELECTOR
+      ).textContent = Messages.EDIT_LEAVE_REQUEST;
 
       // Populate form fields
-      document.getElementById("leaveId").value = leave.id;
-      document.getElementById("leaveCategory").value = leave.leaveCategory;
-      document.getElementById("leavePeriod").value = leave.leavePeriod;
-      document.getElementById("startDate").value = leave.startDate;
-      document.getElementById("endDate").value = leave.endDate;
-      document.getElementById("reason").value = leave.reason;
+      document.getElementById(DomElements.LEAVE_ID).value = leave.id;
+      document.getElementById(DomElements.LEAVE_CATEGORY).value = leave.leaveCategory;
+      document.getElementById(DomElements.LEAVE_PERIOD).value = leave.leavePeriod;
+      document.getElementById(DomElements.START_DATE).value = leave.startDate;
+      document.getElementById(DomElements.END_DATE).value = leave.endDate;
+      document.getElementById(DomElements.REASON).value = leave.reason;
 
       // Calculate total days
       calculateTotalDays();
 
       // Show modal
       const modal = new bootstrap.Modal(
-        document.getElementById("applyLeaveModal")
+        document.getElementById(DomElements.APPLY_LEAVE_MODAL)
       );
       modal.show();
     })
     .catch((error) => {
-      console.error("Error:", error);
-      alert("Failed to load leave request details. Please try again.");
+      console.error(Messages.ERROR_PREFIX, error);
+      alert(Messages.FAILED_TO_LOAD_LEAVE_DETAILS);
     });
 }
 
 function resetForm() {
-  const leaveForm = document.getElementById("leaveForm");
+  const leaveForm = document.getElementById(DomElements.LEAVE_FORM);
   if (leaveForm) {
     leaveForm.reset();
   }
   
-  const leaveIdEl = document.getElementById("leaveId");
+  const leaveIdEl = document.getElementById(DomElements.LEAVE_ID);
   if (leaveIdEl) {
     leaveIdEl.value = "";
   }
   
-  const totalDaysEl = document.getElementById("totalDays");
+  const totalDaysEl = document.getElementById(DomElements.TOTAL_DAYS);
   if (totalDaysEl) {
-    totalDaysEl.textContent = "0";
+    totalDaysEl.textContent = Messages.DEFAULT_TOTAL_DAYS;
   }
   
-  const modalTitle = document.querySelector("#applyLeaveModal .modal-title");
+  const modalTitle = document.querySelector(Messages.MODAL_TITLE_SELECTOR);
   if (modalTitle) {
-    modalTitle.textContent = "Apply for Leave";
+    modalTitle.textContent = Messages.APPLY_FOR_LEAVE;
   }
 }
 
 function cancelLeave(id) {
-  if (confirm("Are you sure you want to cancel this leave request?")) {
-    fetch(`/lazyhr/api/leave/${id}/cancel?userId=${userId}`, {
-      method: "DELETE",
+  if (confirm(Messages.CONFIRM_CANCEL_LEAVE)) {
+    fetch(ApiEndpoints.LEAVE_CANCEL_WITH_USER_ID(id, userId), {
+      method: HttpMethods.DELETE,
       headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
+        "Content-Type": ContentTypes.APPLICATION_JSON,
+        [Messages.ACCEPT_HEADER]: ContentTypes.APPLICATION_JSON,
       },
     })
       .then((response) => {
-        console.log("Cancel response status:", response.status);
+        console.log(Messages.CANCEL_RESPONSE_STATUS, response.status);
         // Check if the response is ok (status in the range 200-299)
         if (!response.ok) {
-          throw new Error("Server returned status: " + response.status);
+          throw new Error(Messages.SERVER_RETURNED_STATUS + response.status);
         }
         return response.text().then((text) => {
           // Try to parse as JSON if there's content, otherwise return empty object
@@ -352,52 +342,39 @@ function cancelLeave(id) {
         });
       })
       .then((data) => {
-        console.log("Cancel response data:", data);
+        console.log(Messages.CANCEL_RESPONSE_DATA, data);
         // Check both status and response.ok since server might return 200 with error status
         if (
-          data.status === "success" ||
-          data.message === "Cancelled" ||
+          data.status === HttpStatus.SUCCESS ||
+          data.message === Messages.CANCELLED_STATUS ||
           data.cancelled
         ) {
-          alert("Leave request cancelled successfully!");
+          alert(Messages.LEAVE_REQUEST_CANCELLED);
           // Use our refresh function instead of full page reload
           refreshLeaveRequestsTable();
         } else {
-          throw new Error(data.message || "Unknown error occurred");
+          throw new Error(data.message || Messages.UNKNOWN_ERROR_OCCURRED);
         }
       })
       .catch((error) => {
-        console.error("Error cancelling leave request:", error);
-        alert("Error: " + error.message);
+        console.error(Messages.ERROR_CANCELLING_LEAVE, error);
+        alert(Messages.ERROR_PREFIX + error.message);
       });
   }
 }
 
 // Timestamp formatting utility
-function formatTimestamp(timestamp, format = "MMM dd, yyyy") {
+function formatTimestamp(timestamp, format = DateTimeFormats.MMM_DD_YYYY) {
   if (!timestamp) return "";
   const date = new Date(timestamp);
 
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
+  const months = DateTimeData.MONTHS;
 
-  if (format === "MMM dd, yyyy") {
+  if (format === DateTimeFormats.MMM_DD_YYYY) {
     return (
       months[date.getMonth()] +
       " " +
-      String(date.getDate()).padStart(2, "0") +
+      String(date.getDate()).padStart(Messages.PAD_START_LENGTH, Messages.PAD_START_STRING) +
       ", " +
       date.getFullYear()
     );
@@ -407,8 +384,8 @@ function formatTimestamp(timestamp, format = "MMM dd, yyyy") {
 
 // Format all timestamps on page load
 function formatAllTimestamps() {
-  document.querySelectorAll(".timestamp-format").forEach((element) => {
-    const timestamp = element.getAttribute("data-timestamp");
+  document.querySelectorAll(CssSelectors.TIMESTAMP_FORMAT).forEach((element) => {
+    const timestamp = element.getAttribute(DataAttributes.TIMESTAMP);
     if (timestamp) {
       element.textContent = formatTimestamp(parseInt(timestamp));
     }
@@ -418,12 +395,12 @@ function formatAllTimestamps() {
 // Convert date string (YYYY-MM-DD) to Unix timestamp in milliseconds
 function dateToTimestamp(dateString) {
   if (!dateString) return null;
-  const date = new Date(dateString + "T00:00:00.000Z");
+  const date = new Date(dateString + Messages.TIMEZONE_UTC_SUFFIX);
   return date.getTime();
 }
 
 // Initialize everything when DOM is loaded
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener(EventTypes.DOM_CONTENT_LOADED, function() {
   initializeDateInputs();
   initializeModalEvents();
   initializeLeaveForm();

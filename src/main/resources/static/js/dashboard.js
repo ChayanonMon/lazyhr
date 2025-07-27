@@ -8,26 +8,26 @@ function initializeUserData(userIdValue) {
 
 // Clock In functionality
 function initializeClockInButton() {
-  const clockInBtn = document.getElementById("clockInBtn");
+  const clockInBtn = document.getElementById(DomElements.CLOCK_IN_BTN);
   if (clockInBtn) {
-    clockInBtn.addEventListener("click", function () {
-      fetch("/lazyhr/api/attendance/clock-in?userId=" + userId, {
-        method: "POST",
+    clockInBtn.addEventListener(EventTypes.CLICK, function () {
+      fetch(`${ApiEndpoints.CLOCK_IN}${userId}`, {
+        method: HttpMethods.POST,
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": ContentTypes.APPLICATION_JSON,
         },
       })
         .then((response) => response.json())
         .then((data) => {
-          if (data.status === "success") {
-            alert("Successfully clocked in!");
+          if (data.status === HttpStatus.SUCCESS) {
+            alert(Messages.SUCCESSFULLY_CLOCKED_IN);
             location.reload();
           } else {
-            alert("Error: " + data.message);
+            alert(Messages.ERROR_PREFIX + data.message);
           }
         })
         .catch((error) => {
-          alert("Error clocking in: " + error.message);
+          alert(Messages.ERROR_CLOCKING_IN_PREFIX + error.message);
         });
     });
   }
@@ -35,26 +35,26 @@ function initializeClockInButton() {
 
 // Clock Out functionality
 function initializeClockOutButton() {
-  const clockOutBtn = document.getElementById("clockOutBtn");
+  const clockOutBtn = document.getElementById(DomElements.CLOCK_OUT_BTN);
   if (clockOutBtn) {
-    clockOutBtn.addEventListener("click", function () {
-      fetch("/lazyhr/api/attendance/clock-out?userId=" + userId, {
-        method: "POST",
+    clockOutBtn.addEventListener(EventTypes.CLICK, function () {
+      fetch(`${ApiEndpoints.CLOCK_OUT}${userId}`, {
+        method: HttpMethods.POST,
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": ContentTypes.APPLICATION_JSON,
         },
       })
         .then((response) => response.json())
         .then((data) => {
-          if (data.status === "success") {
-            alert("Successfully clocked out!");
+          if (data.status === HttpStatus.SUCCESS) {
+            alert(Messages.SUCCESSFULLY_CLOCKED_OUT);
             location.reload();
           } else {
-            alert("Error: " + data.message);
+            alert(Messages.ERROR_PREFIX + data.message);
           }
         })
         .catch((error) => {
-          alert("Error clocking out: " + error.message);
+          alert(Messages.ERROR_CLOCKING_OUT_PREFIX + error.message);
         });
     });
   }
@@ -62,42 +62,42 @@ function initializeClockOutButton() {
 
 // Leave application form
 function initializeLeaveForm() {
-  const leaveForm = document.getElementById("leaveForm");
+  const leaveForm = document.getElementById(DomElements.LEAVE_FORM);
   if (leaveForm) {
-    leaveForm.addEventListener("submit", function (e) {
+    leaveForm.addEventListener(EventTypes.SUBMIT, function (e) {
       e.preventDefault();
 
       const leaveData = {
         userId: userId,
-        leaveCategory: document.getElementById("leaveCategory").value,
-        leavePeriod: document.getElementById("leavePeriod").value,
-        startDate: document.getElementById("startDate").value,
-        endDate: document.getElementById("endDate").value,
-        reason: document.getElementById("reason").value,
+        leaveCategory: document.getElementById(DomElements.LEAVE_CATEGORY).value,
+        leavePeriod: document.getElementById(DomElements.LEAVE_PERIOD).value,
+        startDate: document.getElementById(DomElements.START_DATE).value,
+        endDate: document.getElementById(DomElements.END_DATE).value,
+        reason: document.getElementById(DomElements.REASON).value,
       };
 
-      fetch("/lazyhr/api/leave/apply", {
-        method: "POST",
+      fetch(ApiEndpoints.LEAVE_APPLY, {
+        method: HttpMethods.POST,
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": ContentTypes.APPLICATION_JSON,
         },
         body: JSON.stringify(leaveData),
       })
         .then((response) => response.json())
         .then((data) => {
-          if (data.status === "success") {
-            alert("Leave application submitted successfully!");
-            document.getElementById("leaveForm").reset();
+          if (data.status === HttpStatus.SUCCESS) {
+            alert(Messages.LEAVE_APPLICATION_SUBMITTED);
+            document.getElementById(DomElements.LEAVE_FORM).reset();
             bootstrap.Modal.getInstance(
-              document.getElementById("leaveModal")
+              document.getElementById(DomElements.LEAVE_MODAL)
             ).hide();
             location.reload();
           } else {
-            alert("Error: " + data.message);
+            alert(Messages.ERROR_PREFIX + data.message);
           }
         })
         .catch((error) => {
-          alert("Error submitting leave application: " + error.message);
+          alert(Messages.ERROR_SUBMITTING_LEAVE + error.message);
         });
     });
   }
@@ -113,30 +113,30 @@ function formatTimestamp(timestamp) {
 function formatTimestampShort(timestamp) {
   if (!timestamp) return "";
   const date = new Date(parseInt(timestamp));
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
+  return date.toLocaleDateString(Messages.EN_US_LOCALE, {
+    month: Messages.SHORT_MONTH_OPTION,
+    day: Messages.NUMERIC_DAY_OPTION,
   });
 }
 
 function formatTime(timestamp) {
-  if (!timestamp) return "Not recorded";
+  if (!timestamp) return Messages.NOT_RECORDED;
   const date = new Date(parseInt(timestamp));
-  return date.toLocaleTimeString("en-US", {
+  return date.toLocaleTimeString(Messages.EN_US_LOCALE, {
     hour12: false,
-    hour: "2-digit",
-    minute: "2-digit",
+    hour: Messages.HOUR_2_DIGIT,
+    minute: Messages.MINUTE_2_DIGIT,
   });
 }
 
 function formatAttendanceTimeRange(clockInTimestamp, clockOutTimestamp) {
-  if (!clockInTimestamp) return "No record";
+  if (!clockInTimestamp) return Messages.NO_RECORD;
   if (clockInTimestamp && clockOutTimestamp) {
     return (
-      formatTime(clockInTimestamp) + " - " + formatTime(clockOutTimestamp)
+      formatTime(clockInTimestamp) + Messages.TIME_SEPARATOR + formatTime(clockOutTimestamp)
     );
   } else {
-    return "In: " + formatTime(clockInTimestamp);
+    return Messages.IN_PREFIX + formatTime(clockInTimestamp);
   }
 }
 
@@ -149,48 +149,48 @@ function dateToTimestamp(dateString) {
 function initializeTimestampFormatting() {
   // Format timestamp elements
   document
-    .querySelectorAll(".format-timestamp")
+    .querySelectorAll(CssSelectors.FORMAT_TIMESTAMP)
     .forEach(function (element) {
-      const timestamp = element.getAttribute("data-timestamp");
+      const timestamp = element.getAttribute(DataAttributes.TIMESTAMP);
       if (timestamp) {
         element.textContent = formatTimestamp(timestamp);
       }
     });
 
   document
-    .querySelectorAll(".format-timestamp-short")
+    .querySelectorAll(CssSelectors.FORMAT_TIMESTAMP_SHORT)
     .forEach(function (element) {
-      const timestamp = element.getAttribute("data-timestamp");
+      const timestamp = element.getAttribute(DataAttributes.TIMESTAMP);
       if (timestamp) {
         element.textContent = formatTimestampShort(timestamp);
       }
     });
 
-  document.querySelectorAll(".format-time").forEach(function (element) {
-    const timestamp = element.getAttribute("data-timestamp");
+  document.querySelectorAll(CssSelectors.FORMAT_TIME).forEach(function (element) {
+    const timestamp = element.getAttribute(DataAttributes.TIMESTAMP);
     if (timestamp) {
       element.textContent = formatTime(timestamp);
     }
   });
 
   document
-    .querySelectorAll(".attendance-time-range")
+    .querySelectorAll(CssSelectors.ATTENDANCE_TIME_RANGE)
     .forEach(function (element) {
-      const clockIn = element.getAttribute("data-clock-in");
-      const clockOut = element.getAttribute("data-clock-out");
+      const clockIn = element.getAttribute(Messages.DATA_CLOCK_IN);
+      const clockOut = element.getAttribute(Messages.DATA_CLOCK_OUT);
       element.textContent = formatAttendanceTimeRange(clockIn, clockOut);
     });
 }
 
 // Handle leave application form submission with timestamp conversion
 function initializeLeaveApplicationForm() {
-  const leaveForm = document.querySelector("#leaveApplicationForm");
+  const leaveForm = document.querySelector(CssSelectors.LEAVE_APPLICATION_FORM);
   if (leaveForm) {
-    leaveForm.addEventListener("submit", function (e) {
+    leaveForm.addEventListener(EventTypes.SUBMIT, function (e) {
       e.preventDefault();
 
-      const startDateInput = leaveForm.querySelector("#startDate");
-      const endDateInput = leaveForm.querySelector("#endDate");
+      const startDateInput = leaveForm.querySelector(CssSelectors.START_DATE_SELECTOR);
+      const endDateInput = leaveForm.querySelector(CssSelectors.END_DATE_SELECTOR);
 
       if (startDateInput && startDateInput.value) {
         const startTimestamp = dateToTimestamp(startDateInput.value);
@@ -213,7 +213,7 @@ function initializeLeaveApplicationForm() {
 }
 
 // Initialize everything when DOM is loaded
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener(EventTypes.DOM_CONTENT_LOADED, function () {
   initializeClockInButton();
   initializeClockOutButton();
   initializeLeaveForm();

@@ -1,21 +1,11 @@
 // Update current time
 function updateTime() {
   const now = new Date();
-  const timeString = now.toLocaleTimeString("en-US", {
-    hour12: false,
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-  const dateString = now.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const timeString = now.toLocaleTimeString(Messages.EN_US_LOCALE, LocaleOptions.TIME_OPTIONS);
+  const dateString = now.toLocaleDateString(Messages.EN_US_LOCALE, LocaleOptions.DATE_OPTIONS);
 
-  document.getElementById("currentTime").textContent = timeString;
-  document.getElementById("currentDate").textContent = dateString;
+  document.getElementById(DomElements.CURRENT_TIME).textContent = timeString;
+  document.getElementById(DomElements.CURRENT_DATE).textContent = dateString;
 }
 
 // Global variables for user data (will be initialized from HTML)
@@ -31,117 +21,89 @@ function initializeUserData(userId, hasUser) {
 // Clock in function
 function clockIn() {
   if (!hasUserValue || !userIdValue || userIdValue === 0) {
-    alert(
-      "User not found. Please refresh the page and ensure you are logged in."
-    );
+    alert(Messages.USER_LOGIN_REQUIRED);
     return;
   }
 
-  fetch(`/lazyhr/api/attendance/clock-in?userId=${userIdValue}`, {
-    method: "POST",
+  fetch(`${ApiEndpoints.CLOCK_IN}${userIdValue}`, {
+    method: HttpMethods.POST,
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": ContentTypes.APPLICATION_JSON,
     },
   })
     .then((response) => response.json())
     .then((data) => {
-      if (data.status === "success") {
-        alert("Clocked in successfully!");
+      if (data.status === HttpStatus.SUCCESS) {
+        alert(Messages.CLOCKED_IN_SUCCESSFULLY);
         // Force reload without cache
-        location.href = "/lazyhr/attendance?t=" + new Date().getTime();
+        location.href = `${UrlParams.ATTENDANCE_REFRESH}${UrlParams.TIMESTAMP_PARAM()}`;
       } else {
-        alert("Error: " + (data.message || "Clock in failed"));
+        alert(Messages.ERROR_PREFIX + (data.message || Messages.CLOCK_IN_FAILED));
       }
     })
     .catch((error) => {
-      console.error("Error:", error);
-      alert("Error clocking in. Please try again.");
+      console.error(Messages.ERROR_PREFIX, error);
+      alert(Messages.ERROR_CLOCKING_IN);
     });
 }
 
 // Clock out function
 function clockOut() {
   if (!hasUserValue || !userIdValue || userIdValue === 0) {
-    alert(
-      "User not found. Please refresh the page and ensure you are logged in."
-    );
+    alert(Messages.USER_LOGIN_REQUIRED);
     return;
   }
 
-  fetch(`/lazyhr/api/attendance/clock-out?userId=${userIdValue}`, {
-    method: "POST",
+  fetch(`${ApiEndpoints.CLOCK_OUT}${userIdValue}`, {
+    method: HttpMethods.POST,
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": ContentTypes.APPLICATION_JSON,
     },
   })
     .then((response) => response.json())
     .then((data) => {
-      if (data.status === "success") {
-        alert("Clocked out successfully!");
+      if (data.status === HttpStatus.SUCCESS) {
+        alert(Messages.CLOCKED_OUT_SUCCESSFULLY);
         // Force reload without cache
-        location.href = "/lazyhr/attendance?t=" + new Date().getTime();
+        location.href = `${UrlParams.ATTENDANCE_REFRESH}${UrlParams.TIMESTAMP_PARAM()}`;
       } else {
-        alert("Error: " + (data.message || "Clock out failed"));
+        alert(Messages.ERROR_PREFIX + (data.message || Messages.CLOCK_OUT_FAILED));
       }
     })
     .catch((error) => {
-      console.error("Error:", error);
-      alert("Error clocking out. Please try again.");
+      console.error(Messages.ERROR_PREFIX, error);
+      alert(Messages.ERROR_CLOCKING_OUT);
     });
 }
 
 // Timestamp formatting utilities
-function formatTimestamp(timestamp, format = "MMM dd, yyyy") {
+function formatTimestamp(timestamp, format = DateTimeFormats.MMM_DD_YYYY) {
   if (!timestamp) return "";
   const date = new Date(timestamp);
 
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  const days = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
-
-  if (format === "MMM dd, yyyy") {
+  if (format === DateTimeFormats.MMM_DD_YYYY) {
     return (
-      months[date.getMonth()] +
+      DateTimeData.MONTHS[date.getMonth()] +
       " " +
-      String(date.getDate()).padStart(2, "0") +
+      String(date.getDate()).padStart(Messages.PAD_START_LENGTH, Messages.PAD_START_STRING) +
       ", " +
       date.getFullYear()
     );
-  } else if (format === "EEEE") {
-    return days[date.getDay()];
-  } else if (format === "HH:mm:ss") {
+  } else if (format === DateTimeFormats.EEEE) {
+    return DateTimeData.DAYS[date.getDay()];
+  } else if (format === DateTimeFormats.HH_MM_SS) {
     return (
-      String(date.getHours()).padStart(2, "0") +
+      String(date.getHours()).padStart(Messages.PAD_START_LENGTH, Messages.PAD_START_STRING) +
       ":" +
-      String(date.getMinutes()).padStart(2, "0") +
+      String(date.getMinutes()).padStart(Messages.PAD_START_LENGTH, Messages.PAD_START_STRING) +
       ":" +
-      String(date.getSeconds()).padStart(2, "0")
+      String(date.getSeconds()).padStart(Messages.PAD_START_LENGTH, Messages.PAD_START_STRING)
     );
-  } else if (format === "HH:mm") {
+  } else if (format === DateTimeFormats.HH_MM) {
     return (
-      String(date.getHours()).padStart(2, "0") +
+      String(date.getHours()).padStart(Messages.PAD_START_LENGTH, Messages.PAD_START_STRING) +
       ":" +
-      String(date.getMinutes()).padStart(2, "0")
+      String(date.getMinutes()).padStart(Messages.PAD_START_LENGTH, Messages.PAD_START_STRING)
     );
   }
   return date.toLocaleDateString();
@@ -150,38 +112,38 @@ function formatTimestamp(timestamp, format = "MMM dd, yyyy") {
 // Format all timestamps on page load
 function formatAllTimestamps() {
   // Format date fields
-  document.querySelectorAll(".date-format").forEach((element) => {
-    const timestamp = element.getAttribute("data-timestamp");
+  document.querySelectorAll(CssSelectors.DATE_FORMAT).forEach((element) => {
+    const timestamp = element.getAttribute(DataAttributes.TIMESTAMP);
     if (timestamp) {
       element.textContent = formatTimestamp(
         parseInt(timestamp),
-        "MMM dd, yyyy"
+        DateTimeFormats.MMM_DD_YYYY
       );
     }
   });
 
   // Format day fields
-  document.querySelectorAll(".day-format").forEach((element) => {
-    const timestamp = element.getAttribute("data-timestamp");
+  document.querySelectorAll(CssSelectors.DAY_FORMAT).forEach((element) => {
+    const timestamp = element.getAttribute(DataAttributes.TIMESTAMP);
     if (timestamp) {
-      element.textContent = formatTimestamp(parseInt(timestamp), "EEEE");
+      element.textContent = formatTimestamp(parseInt(timestamp), DateTimeFormats.EEEE);
     }
   });
 
   // Format time fields
-  document.querySelectorAll(".time-format").forEach((element) => {
-    const timestamp = element.getAttribute("data-timestamp");
-    if (timestamp && timestamp !== "--:--:--" && timestamp !== "-") {
+  document.querySelectorAll(CssSelectors.TIME_FORMAT).forEach((element) => {
+    const timestamp = element.getAttribute(DataAttributes.TIMESTAMP);
+    if (timestamp && timestamp !== DateTimeFormats.TIME_NOT_AVAILABLE && timestamp !== DateTimeFormats.DATE_NOT_AVAILABLE) {
       element.textContent = formatTimestamp(
         parseInt(timestamp),
-        "HH:mm:ss"
+        DateTimeFormats.HH_MM_SS
       );
     }
   });
 }
 
 // Initialize everything when DOM is loaded
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener(EventTypes.DOM_CONTENT_LOADED, function() {
   // Start time updates
   updateTime();
   setInterval(updateTime, 1000);
