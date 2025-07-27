@@ -1,5 +1,6 @@
 package com.example.lazyhr.config;
 
+import com.example.lazyhr.constants.ApiMessages;
 import com.example.lazyhr.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -48,11 +49,11 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/dashboard", true)
+                        .defaultSuccessUrl(ApiMessages.DEFAULT_SUCCESS_URL, true)
                         .permitAll())
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login?logout")
+                        .logoutSuccessUrl(ApiMessages.LOGOUT_SUCCESS_URL)
                         .permitAll())
                 .headers(headers -> headers
                         .frameOptions(frameOptions -> frameOptions.sameOrigin()) // Allow H2 console frames

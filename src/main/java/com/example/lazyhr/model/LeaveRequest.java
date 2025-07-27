@@ -1,5 +1,6 @@
 package com.example.lazyhr.model;
 
+import com.example.lazyhr.constants.ApiMessages;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -117,10 +118,10 @@ public class LeaveRequest {
     
     public String getStatusBadgeClass() {
         switch (status) {
-            case PENDING: return "badge-warning";
-            case APPROVED: return "badge-success";
-            case REJECTED: return "badge-danger";
-            default: return "badge-secondary";
+            case PENDING: return ApiMessages.BADGE_WARNING;
+            case APPROVED: return ApiMessages.BADGE_SUCCESS;
+            case REJECTED: return ApiMessages.BADGE_DANGER;
+            default: return ApiMessages.BADGE_SECONDARY;
         }
     }
     

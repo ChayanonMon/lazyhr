@@ -2,6 +2,7 @@ package com.example.lazyhr.controller;
 
 import com.example.lazyhr.model.Attendance;
 import com.example.lazyhr.service.AttendanceService;
+import com.example.lazyhr.constants.ApiMessages;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,10 +33,10 @@ public class AttendanceController {
                             "attendanceDate", attendance.getAttendanceDate())));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, e.getMessage(), null));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to clock in: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_CLOCK_IN + e.getMessage(), null));
         }
     }
 
@@ -54,10 +55,10 @@ public class AttendanceController {
                             "attendanceDate", attendance.getAttendanceDate())));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, e.getMessage(), null));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to clock out: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_CLOCK_OUT + e.getMessage(), null));
         }
     }
 
@@ -75,7 +76,7 @@ public class AttendanceController {
             }
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch today's attendance: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_TODAYS_ATTENDANCE + e.getMessage(), null));
         }
     }
 
@@ -94,7 +95,7 @@ public class AttendanceController {
             return ResponseEntity.ok(new ApiResponse("success", "Attendance records retrieved", attendances));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch attendance: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_ATTENDANCE + e.getMessage(), null));
         }
     }
 
@@ -108,7 +109,7 @@ public class AttendanceController {
             return ResponseEntity.ok(new ApiResponse("success", "Today's attendance records", attendances));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch today's attendances: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_TODAYS_ATTENDANCES + e.getMessage(), null));
         }
     }
 
@@ -122,7 +123,7 @@ public class AttendanceController {
             return ResponseEntity.ok(new ApiResponse("success", "Attendance history retrieved", attendances));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch attendance history: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_ATTENDANCE_HISTORY + e.getMessage(), null));
         }
     }
 
@@ -143,7 +144,7 @@ public class AttendanceController {
             return ResponseEntity.ok(new ApiResponse("success", "Attendance status retrieved", status));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch attendance status: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_ATTENDANCE_STATUS + e.getMessage(), null));
         }
     }
 
@@ -157,7 +158,7 @@ public class AttendanceController {
             return ResponseEntity.ok(new ApiResponse("success", "Notes updated successfully", attendance));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to update notes: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_UPDATE_NOTES + e.getMessage(), null));
         }
     }
 
@@ -171,7 +172,7 @@ public class AttendanceController {
             return ResponseEntity.ok(new ApiResponse("success", "Break duration updated successfully", attendance));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to update break duration: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_UPDATE_BREAK_DURATION + e.getMessage(), null));
         }
     }
 
@@ -185,7 +186,7 @@ public class AttendanceController {
             return ResponseEntity.ok(new ApiResponse("success", "Today's attendance count", todayCount));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch stats: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_STATS + e.getMessage(), null));
         }
     }
 

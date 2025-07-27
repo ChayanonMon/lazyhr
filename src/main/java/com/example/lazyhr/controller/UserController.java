@@ -1,5 +1,6 @@
 package com.example.lazyhr.controller;
 
+import com.example.lazyhr.constants.ApiMessages;
 import com.example.lazyhr.model.User;
 import com.example.lazyhr.model.Role;
 import com.example.lazyhr.service.UserService;
@@ -53,13 +54,13 @@ public class UserController {
             user.setRole(userDto.getRole() != null ? userDto.getRole() : Role.EMPLOYEE);
 
             User savedUser = userService.createUser(user);
-            return ResponseEntity.ok(new ApiResponse("success", "User created successfully", savedUser));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.USER_CREATED_SUCCESSFULLY, savedUser));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, e.getMessage(), null));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to create user: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_CREATE_USER + e.getMessage(), null));
         }
     }
 
@@ -70,10 +71,10 @@ public class UserController {
     public ResponseEntity<?> getAllUsers() {
         try {
             List<User> users = userService.getAllActiveUsers();
-            return ResponseEntity.ok(new ApiResponse("success", "Users retrieved successfully", users));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.USERS_RETRIEVED_SUCCESSFULLY, users));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch users: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_USERS + e.getMessage(), null));
         }
     }
 
@@ -84,10 +85,10 @@ public class UserController {
     public ResponseEntity<?> getUserById(@PathVariable Long userId) {
         try {
             User user = userService.findById(userId);
-            return ResponseEntity.ok(new ApiResponse("success", "User retrieved successfully", user));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.USER_RETRIEVED_SUCCESSFULLY, user));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch user: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_USER + e.getMessage(), null));
         }
     }
 
@@ -98,10 +99,10 @@ public class UserController {
     public ResponseEntity<?> getUserByUsername(@PathVariable String username) {
         try {
             User user = userService.findByUsername(username);
-            return ResponseEntity.ok(new ApiResponse("success", "User retrieved successfully", user));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.USER_RETRIEVED_SUCCESSFULLY, user));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch user: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_USER + e.getMessage(), null));
         }
     }
 
@@ -143,10 +144,10 @@ public class UserController {
             }
 
             User updatedUser = userService.updateUser(user);
-            return ResponseEntity.ok(new ApiResponse("success", "User updated successfully", updatedUser));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.USER_UPDATED_SUCCESSFULLY, updatedUser));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to update user: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_UPDATE_USER + e.getMessage(), null));
         }
     }
 
@@ -157,10 +158,10 @@ public class UserController {
     public ResponseEntity<?> deactivateUser(@PathVariable Long userId) {
         try {
             userService.deactivateUser(userId);
-            return ResponseEntity.ok(new ApiResponse("success", "User deactivated successfully", null));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.USER_DEACTIVATED_SUCCESSFULLY, null));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to deactivate user: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_DEACTIVATE_USER + e.getMessage(), null));
         }
     }
 
@@ -171,10 +172,10 @@ public class UserController {
     public ResponseEntity<?> activateUser(@PathVariable Long userId) {
         try {
             userService.activateUser(userId);
-            return ResponseEntity.ok(new ApiResponse("success", "User activated successfully", null));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.USER_ACTIVATED_SUCCESSFULLY, null));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to activate user: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_ACTIVATE_USER + e.getMessage(), null));
         }
     }
 
@@ -185,10 +186,10 @@ public class UserController {
     public ResponseEntity<?> searchUsers(@RequestParam String query) {
         try {
             List<User> users = userService.searchUsers(query);
-            return ResponseEntity.ok(new ApiResponse("success", "Search results retrieved", users));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.SEARCH_RESULTS_RETRIEVED, users));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to search users: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_SEARCH_USERS + e.getMessage(), null));
         }
     }
 
@@ -199,10 +200,10 @@ public class UserController {
     public ResponseEntity<?> getUsersByDepartment(@PathVariable String department) {
         try {
             List<User> users = userService.getUsersByDepartment(department);
-            return ResponseEntity.ok(new ApiResponse("success", "Users by department retrieved", users));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.USERS_BY_DEPARTMENT_RETRIEVED, users));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch users by department: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_USERS_BY_DEPARTMENT + e.getMessage(), null));
         }
     }
 
@@ -213,10 +214,10 @@ public class UserController {
     public ResponseEntity<?> getUsersByRole(@PathVariable Role role) {
         try {
             List<User> users = userService.getUsersByRole(role);
-            return ResponseEntity.ok(new ApiResponse("success", "Users by role retrieved", users));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.USERS_BY_ROLE_RETRIEVED, users));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch users by role: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_USERS_BY_ROLE + e.getMessage(), null));
         }
     }
 
@@ -227,10 +228,10 @@ public class UserController {
     public ResponseEntity<?> updatePassword(@PathVariable Long userId, @RequestBody PasswordUpdateDto passwordDto) {
         try {
             userService.updatePassword(userId, passwordDto.getNewPassword());
-            return ResponseEntity.ok(new ApiResponse("success", "Password updated successfully", null));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.PASSWORD_UPDATED_SUCCESSFULLY, null));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to update password: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_UPDATE_PASSWORD + e.getMessage(), null));
         }
     }
 
@@ -241,10 +242,10 @@ public class UserController {
     public ResponseEntity<?> checkUsernameAvailability(@PathVariable String username) {
         try {
             boolean available = userService.isUsernameAvailable(username);
-            return ResponseEntity.ok(new ApiResponse("success", "Username availability checked", available));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.USERNAME_AVAILABILITY_CHECKED, available));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to check username: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_CHECK_USERNAME + e.getMessage(), null));
         }
     }
 
@@ -255,10 +256,10 @@ public class UserController {
     public ResponseEntity<?> checkEmailAvailability(@PathVariable String email) {
         try {
             boolean available = userService.isEmailAvailable(email);
-            return ResponseEntity.ok(new ApiResponse("success", "Email availability checked", available));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.EMAIL_AVAILABILITY_CHECKED, available));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to check email: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_CHECK_EMAIL + e.getMessage(), null));
         }
     }
 
@@ -274,10 +275,10 @@ public class UserController {
             stats.setManagerCount(userService.getActiveUserCountByRole(Role.MANAGER));
             stats.setEmployeeCount(userService.getActiveUserCountByRole(Role.EMPLOYEE));
 
-            return ResponseEntity.ok(new ApiResponse("success", "User statistics retrieved", stats));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.USER_STATISTICS_RETRIEVED, stats));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch user stats: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_USER_STATS + e.getMessage(), null));
         }
     }
 

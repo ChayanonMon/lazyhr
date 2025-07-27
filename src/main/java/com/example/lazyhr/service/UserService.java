@@ -3,6 +3,7 @@ package com.example.lazyhr.service;
 import com.example.lazyhr.model.User;
 import com.example.lazyhr.model.Role;
 import com.example.lazyhr.repository.UserRepository;
+import com.example.lazyhr.constants.ApiMessages;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,13 +29,13 @@ public class UserService {
     public User createUser(User user) {
         // Check if username, email, or employee ID already exists
         if (userRepository.existsByUsername(user.getUsername())) {
-            throw new IllegalArgumentException("Username already exists: " + user.getUsername());
+            throw new IllegalArgumentException(ApiMessages.USERNAME_ALREADY_EXISTS + user.getUsername());
         }
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new IllegalArgumentException("Email already exists: " + user.getEmail());
+            throw new IllegalArgumentException(ApiMessages.EMAIL_ALREADY_EXISTS + user.getEmail());
         }
         if (userRepository.existsByEmployeeId(user.getEmployeeId())) {
-            throw new IllegalArgumentException("Employee ID already exists: " + user.getEmployeeId());
+            throw new IllegalArgumentException(ApiMessages.EMPLOYEE_ID_ALREADY_EXISTS + user.getEmployeeId());
         }
 
         // Encode password
@@ -54,7 +55,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public User findByUsername(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with username: " + username));
+                .orElseThrow(() -> new EntityNotFoundException(ApiMessages.USER_NOT_FOUND_WITH_USERNAME + username));
     }
 
     /**
@@ -63,7 +64,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public User findById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException(ApiMessages.USER_NOT_FOUND_WITH_ID + id));
     }
 
     /**

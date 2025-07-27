@@ -1,5 +1,6 @@
 package com.example.lazyhr.config;
 
+import com.example.lazyhr.constants.ApiMessages;
 import com.example.lazyhr.model.*;
 import com.example.lazyhr.service.UserService;
 import org.slf4j.Logger;
@@ -145,13 +146,13 @@ public class DataInitializer implements CommandLineRunner {
             inactiveEmployee2.setActive(false); // Inactive user
             userService.createUser(inactiveEmployee2);
 
-            logger.info("Sample users created successfully!");
+            logger.info(ApiMessages.SAMPLE_USERS_CREATED_SUCCESSFULLY);
             logger.info("Admin credentials: admin / admin123");
             logger.info("Manager credentials: manager / manager123");
             logger.info("Employee credentials: jdoe / password123");
 
         } catch (Exception e) {
-            logger.error("Error creating sample users: {}", e.getMessage(), e);
+            logger.error(ApiMessages.ERROR_CREATING_SAMPLE_USERS, e.getMessage(), e);
             e.printStackTrace();
         }
     }

@@ -4,6 +4,7 @@ import com.example.lazyhr.model.LeaveRequest;
 import com.example.lazyhr.model.LeaveStatus;
 import com.example.lazyhr.service.LeaveService;
 import com.example.lazyhr.service.UserService;
+import com.example.lazyhr.constants.ApiMessages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,15 +52,15 @@ public class LeaveController {
             logger.info("Leave request saved successfully with ID: {}", savedRequest.getId());
 
             return ResponseEntity
-                    .ok(new ApiResponse("success", "Leave application submitted successfully", savedRequest));
+                    .ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.LEAVE_APPLICATION_SUBMITTED_SUCCESSFULLY, savedRequest));
         } catch (IllegalArgumentException | IllegalStateException e) {
-            logger.warn("Validation error in leave application: {}", e.getMessage());
+            logger.warn(ApiMessages.VALIDATION_ERROR_IN_LEAVE_APPLICATION, e.getMessage());
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, e.getMessage(), null));
         } catch (Exception e) {
-            logger.error("Unexpected error in leave application", e);
+            logger.error(ApiMessages.UNEXPECTED_ERROR_IN_LEAVE_APPLICATION, e);
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to apply for leave: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_APPLY_FOR_LEAVE + e.getMessage(), null));
         }
     }
 
@@ -74,13 +75,13 @@ public class LeaveController {
 
         try {
             LeaveRequest approvedRequest = leaveService.approveLeave(leaveId, approverId, comments);
-            return ResponseEntity.ok(new ApiResponse("success", "Leave request approved", approvedRequest));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.LEAVE_REQUEST_APPROVED, approvedRequest));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, e.getMessage(), null));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to approve leave: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_APPROVE_LEAVE + e.getMessage(), null));
         }
     }
 
@@ -95,13 +96,13 @@ public class LeaveController {
 
         try {
             LeaveRequest rejectedRequest = leaveService.rejectLeave(leaveId, approverId, comments);
-            return ResponseEntity.ok(new ApiResponse("success", "Leave request rejected", rejectedRequest));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.LEAVE_REQUEST_REJECTED, rejectedRequest));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, e.getMessage(), null));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to reject leave: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_REJECT_LEAVE + e.getMessage(), null));
         }
     }
 
@@ -112,10 +113,10 @@ public class LeaveController {
     public ResponseEntity<?> getUserLeaves(@PathVariable Long userId) {
         try {
             List<LeaveRequest> leaveRequests = leaveService.getUserLeaveRequests(userId);
-            return ResponseEntity.ok(new ApiResponse("success", "User leave requests retrieved", leaveRequests));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.USER_LEAVE_REQUESTS_RETRIEVED, leaveRequests));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch leave requests: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_LEAVE_REQUESTS + e.getMessage(), null));
         }
     }
 
@@ -126,10 +127,10 @@ public class LeaveController {
     public ResponseEntity<?> getLeavesByStatus(@PathVariable LeaveStatus status) {
         try {
             List<LeaveRequest> leaveRequests = leaveService.getLeaveRequestsByStatus(status);
-            return ResponseEntity.ok(new ApiResponse("success", "Leave requests retrieved by status", leaveRequests));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.LEAVE_REQUESTS_RETRIEVED_BY_STATUS, leaveRequests));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch leave requests: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_LEAVE_REQUESTS + e.getMessage(), null));
         }
     }
 
@@ -140,10 +141,10 @@ public class LeaveController {
     public ResponseEntity<?> getPendingLeaves() {
         try {
             List<LeaveRequest> pendingRequests = leaveService.getPendingLeaveRequests();
-            return ResponseEntity.ok(new ApiResponse("success", "Pending leave requests retrieved", pendingRequests));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.PENDING_LEAVE_REQUESTS_RETRIEVED, pendingRequests));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch pending requests: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_PENDING_REQUESTS + e.getMessage(), null));
         }
     }
 
@@ -154,10 +155,10 @@ public class LeaveController {
     public ResponseEntity<?> getLeaveById(@PathVariable Long leaveId) {
         try {
             LeaveRequest leaveRequest = leaveService.getLeaveRequestById(leaveId);
-            return ResponseEntity.ok(new ApiResponse("success", "Leave request retrieved", leaveRequest));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.LEAVE_REQUEST_RETRIEVED, leaveRequest));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch leave request: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_LEAVE_REQUEST + e.getMessage(), null));
         }
     }
 
@@ -168,10 +169,10 @@ public class LeaveController {
     public ResponseEntity<?> getLeavesByTimestamp(@PathVariable Long timestamp) {
         try {
             List<LeaveRequest> leaveRequests = leaveService.getLeaveRequestsForTimestamp(timestamp);
-            return ResponseEntity.ok(new ApiResponse("success", "Leave requests for date retrieved", leaveRequests));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.LEAVE_REQUESTS_FOR_DATE_RETRIEVED, leaveRequests));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch leave requests: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_LEAVE_REQUESTS + e.getMessage(), null));
         }
     }
 
@@ -182,13 +183,13 @@ public class LeaveController {
     public ResponseEntity<?> cancelLeave(@PathVariable Long leaveId, @RequestParam Long userId) {
         try {
             leaveService.cancelLeaveRequest(leaveId, userId);
-            return ResponseEntity.ok(new ApiResponse("success", "Leave request cancelled successfully", null));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.LEAVE_REQUEST_CANCELLED_SUCCESSFULLY, null));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, e.getMessage(), null));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to cancel leave request: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_CANCEL_LEAVE_REQUEST + e.getMessage(), null));
         }
     }
 
@@ -199,10 +200,10 @@ public class LeaveController {
     public ResponseEntity<?> getLeaveBalance(@PathVariable Long userId, @RequestParam(defaultValue = "2024") int year) {
         try {
             LeaveService.LeaveBalanceSummary balance = leaveService.getLeaveBalanceSummary(userId, year);
-            return ResponseEntity.ok(new ApiResponse("success", "Leave balance retrieved", balance));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.LEAVE_BALANCE_RETRIEVED, balance));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch leave balance: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_LEAVE_BALANCE + e.getMessage(), null));
         }
     }
 
@@ -213,10 +214,10 @@ public class LeaveController {
     public ResponseEntity<?> getPendingCount() {
         try {
             long pendingCount = leaveService.getPendingLeaveRequestsCount();
-            return ResponseEntity.ok(new ApiResponse("success", "Pending leave requests count", pendingCount));
+            return ResponseEntity.ok(new ApiResponse(ApiMessages.SUCCESS, ApiMessages.PENDING_LEAVE_REQUESTS_COUNT, pendingCount));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                    .body(new ApiResponse("error", "Failed to fetch pending count: " + e.getMessage(), null));
+                    .body(new ApiResponse(ApiMessages.ERROR, ApiMessages.FAILED_TO_FETCH_PENDING_COUNT + e.getMessage(), null));
         }
     }
 

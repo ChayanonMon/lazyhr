@@ -1,5 +1,6 @@
 package com.example.lazyhr.service;
 
+import com.example.lazyhr.constants.ApiMessages;
 import com.example.lazyhr.model.LeaveRequest;
 import com.example.lazyhr.model.User;
 import com.example.lazyhr.model.LeaveStatus;
@@ -32,18 +33,18 @@ public class LeaveService {
     public LeaveRequest applyLeave(LeaveRequest leaveRequest) {
         // Validate user exists
         User user = userRepository.findById(leaveRequest.getUser().getId())
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException(ApiMessages.USER_NOT_FOUND));
 
         leaveRequest.setUser(user);
 
         // Validate dates
         if (leaveRequest.getStartDate() > leaveRequest.getEndDate()) {
-            throw new IllegalArgumentException("Start date cannot be after end date");
+            throw new IllegalArgumentException(ApiMessages.START_DATE_AFTER_END_DATE);
         }
 
         long currentTime = System.currentTimeMillis();
         if (leaveRequest.getStartDate() < currentTime) {
-            throw new IllegalArgumentException("Cannot apply for leave in the past");
+            throw new IllegalArgumentException(ApiMessages.CANNOT_APPLY_LEAVE_IN_PAST);
         }
 
         // Check for overlapping approved leaves
@@ -51,8 +52,8 @@ public class LeaveService {
                 user, leaveRequest.getStartDate(), leaveRequest.getEndDate());
 
         if (!overlappingLeaves.isEmpty()) {
-            throw new IllegalStateException("Leave request overlaps with existing approved leave from " +
-                    Instant.ofEpochMilli(overlappingLeaves.get(0).getStartDate()).toString() + " to " +
+            throw new IllegalStateException(ApiMessages.LEAVE_REQUEST_OVERLAPS +
+                    Instant.ofEpochMilli(overlappingLeaves.get(0).getStartDate()).toString() + ApiMessages.TO +
                     Instant.ofEpochMilli(overlappingLeaves.get(0).getEndDate()).toString());
         }
 
@@ -70,13 +71,13 @@ public class LeaveService {
      */
     public LeaveRequest approveLeave(Long leaveId, Long approverId, String comments) {
         LeaveRequest leaveRequest = leaveRequestRepository.findById(leaveId)
-                .orElseThrow(() -> new EntityNotFoundException("Leave request not found with ID: " + leaveId));
+                .orElseThrow(() -> new EntityNotFoundException(ApiMessages.LEAVE_REQUEST_NOT_FOUND_WITH_ID + leaveId));
 
         User approver = userRepository.findById(approverId)
-                .orElseThrow(() -> new EntityNotFoundException("Approver not found with ID: " + approverId));
+                .orElseThrow(() -> new EntityNotFoundException(ApiMessages.APPROVER_NOT_FOUND_WITH_ID + approverId));
 
         if (leaveRequest.getStatus() != LeaveStatus.PENDING) {
-            throw new IllegalStateException("Leave request is not in pending status");
+            throw new IllegalStateException(ApiMessages.LEAVE_REQUEST_NOT_PENDING);
         }
 
         leaveRequest.setStatus(LeaveStatus.APPROVED);
@@ -92,13 +93,13 @@ public class LeaveService {
      */
     public LeaveRequest rejectLeave(Long leaveId, Long approverId, String comments) {
         LeaveRequest leaveRequest = leaveRequestRepository.findById(leaveId)
-                .orElseThrow(() -> new EntityNotFoundException("Leave request not found with ID: " + leaveId));
+                .orElseThrow(() -> new EntityNotFoundException(ApiMessages.LEAVE_REQUEST_NOT_FOUND_WITH_ID + leaveId));
 
         User approver = userRepository.findById(approverId)
-                .orElseThrow(() -> new EntityNotFoundException("Approver not found with ID: " + approverId));
+                .orElseThrow(() -> new EntityNotFoundException(ApiMessages.APPROVER_NOT_FOUND_WITH_ID + approverId));
 
         if (leaveRequest.getStatus() != LeaveStatus.PENDING) {
-            throw new IllegalStateException("Leave request is not in pending status");
+            throw new IllegalStateException(ApiMessages.LEAVE_REQUEST_NOT_PENDING);
         }
 
         leaveRequest.setStatus(LeaveStatus.REJECTED);
@@ -115,7 +116,7 @@ public class LeaveService {
     @Transactional(readOnly = true)
     public List<LeaveRequest> getUserLeaveRequests(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> new EntityNotFoundException(ApiMessages.USER_NOT_FOUND_WITH_ID + userId));
 
         return leaveRequestRepository.findByUserOrderByAppliedDateDesc(user);
     }
@@ -142,7 +143,7 @@ public class LeaveService {
     @Transactional(readOnly = true)
     public LeaveRequest getLeaveRequestById(Long id) {
         return leaveRequestRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Leave request not found with ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException(ApiMessages.LEAVE_REQUEST_NOT_FOUND_WITH_ID + id));
     }
 
     /**
@@ -151,7 +152,7 @@ public class LeaveService {
     @Transactional(readOnly = true)
     public List<LeaveRequest> getUserLeaveRequestsByStatus(Long userId, LeaveStatus status) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> new EntityNotFoundException(ApiMessages.USER_NOT_FOUND_WITH_ID + userId));
 
         return leaveRequestRepository.findByUserAndStatusOrderByAppliedDateDesc(user, status);
     }
@@ -180,7 +181,7 @@ public class LeaveService {
     @Transactional(readOnly = true)
     public Double getTotalLeaveDaysUsed(Long userId, LeaveCategory category, int year) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> new EntityNotFoundException(ApiMessages.USER_NOT_FOUND_WITH_ID + userId));
 
         // Convert year to timestamp range
         LocalDate yearStart = LocalDate.of(year, 1, 1);
@@ -199,7 +200,7 @@ public class LeaveService {
     @Transactional(readOnly = true)
     public boolean hasUserPendingLeaveRequests(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> new EntityNotFoundException(ApiMessages.USER_NOT_FOUND_WITH_ID + userId));
 
         List<LeaveRequest> pendingRequests = leaveRequestRepository.findByUserAndStatusOrderByAppliedDateDesc(user,
                 LeaveStatus.PENDING);
@@ -227,21 +228,21 @@ public class LeaveService {
      */
     public void cancelLeaveRequest(Long leaveId, Long userId) {
         LeaveRequest leaveRequest = leaveRequestRepository.findById(leaveId)
-                .orElseThrow(() -> new EntityNotFoundException("Leave request not found with ID: " + leaveId));
+                .orElseThrow(() -> new EntityNotFoundException(ApiMessages.LEAVE_REQUEST_NOT_FOUND_WITH_ID + leaveId));
 
         // Verify the leave request belongs to the user
         if (!leaveRequest.getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("Leave request does not belong to the user");
+            throw new IllegalArgumentException("ApiMessages.LEAVE_REQUEST_WRONG_USER");
         }
 
         if (leaveRequest.getStatus() != LeaveStatus.PENDING) {
-            throw new IllegalStateException("Only pending leave requests can be cancelled");
+            throw new IllegalStateException("ApiMessages.ONLY_PENDING_REQUESTS_CAN_BE_CANCELLED");
         }
 
         // Check if the start date is still in the future
         long tomorrowTimestamp = System.currentTimeMillis() + (24 * 60 * 60 * 1000); // Add 24 hours
         if (leaveRequest.getStartDate() < tomorrowTimestamp) {
-            throw new IllegalStateException("Cannot cancel leave request that starts today or in the past");
+            throw new IllegalStateException("ApiMessages.CANNOT_CANCEL_PAST_LEAVE");
         }
 
         leaveRequestRepository.delete(leaveRequest);
@@ -254,7 +255,7 @@ public class LeaveService {
     public LeaveBalanceSummary getLeaveBalanceSummary(Long userId, int year) {
         // Validate user exists
         userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> new EntityNotFoundException(ApiMessages.USER_NOT_FOUND_WITH_ID + userId));
 
         LeaveBalanceSummary summary = new LeaveBalanceSummary();
 

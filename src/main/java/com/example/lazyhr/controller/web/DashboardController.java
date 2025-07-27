@@ -1,5 +1,6 @@
 package com.example.lazyhr.controller.web;
 
+import com.example.lazyhr.constants.ApiMessages;
 import com.example.lazyhr.model.User;
 import com.example.lazyhr.model.Attendance;
 import com.example.lazyhr.model.LeaveRequest;
@@ -101,7 +102,7 @@ public class DashboardController {
                 }
             }
         } catch (Exception e) {
-            model.addAttribute("error", "Error loading dashboard: " + e.getMessage());
+            model.addAttribute(ApiMessages.ERROR, ApiMessages.ERROR_LOADING_DASHBOARD + e.getMessage());
         }
 
         return "dashboard";
@@ -176,7 +177,7 @@ public class DashboardController {
                 }
             }
         } catch (Exception e) {
-            model.addAttribute("error", "Error loading leave page: " + e.getMessage());
+            model.addAttribute(ApiMessages.ERROR, ApiMessages.ERROR_LOADING_LEAVE_PAGE + e.getMessage());
         }
 
         return "leave";
@@ -210,7 +211,7 @@ public class DashboardController {
                 model.addAttribute("managerCount", managerCount);
             }
         } catch (Exception e) {
-            model.addAttribute("error", "Error loading users: " + e.getMessage());
+            model.addAttribute(ApiMessages.ERROR, ApiMessages.ERROR_LOADING_USERS + e.getMessage());
         }
 
         return "users";
@@ -240,7 +241,7 @@ public class DashboardController {
                 model.addAttribute("pendingLeaves", pendingLeaves);
             }
         } catch (Exception e) {
-            model.addAttribute("error", "Error loading reports: " + e.getMessage());
+            model.addAttribute(ApiMessages.ERROR, ApiMessages.ERROR_LOADING_REPORTS + e.getMessage());
         }
 
         return "reports";
@@ -259,7 +260,7 @@ public class DashboardController {
      */
     @GetMapping("/error")
     public String error(Model model) {
-        model.addAttribute("errorMessage", "An error occurred");
-        return "error";
+        model.addAttribute("errorMessage", ApiMessages.AN_ERROR_OCCURRED);
+        return ApiMessages.ERROR;
     }
 }
