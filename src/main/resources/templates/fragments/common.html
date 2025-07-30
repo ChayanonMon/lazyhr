@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<!-- Common Page Header Fragment -->
+<div class="row mb-4" th:fragment="pageHeader(title, subtitle, actionButton)">
+    <div class="col">
+        <h2 class="mb-0" th:text="${title}">Page Title</h2>
+        <p class="text-muted" th:text="${subtitle}">Page subtitle</p>
+    </div>
+    <div class="col-auto" th:if="${actionButton != null}">
+        <th:block th:utext="${actionButton}"></th:block>
+    </div>
+</div>
+
+<!-- Alert Component Fragment -->
+<div th:fragment="alert(type, message, icon)" 
+     th:class="'alert alert-' + ${type} + ' alert-dismissible fade show'"
+     th:if="${message != null and message != ''}"
+     role="alert">
+    <i th:class="'fas fa-' + ${icon ?: 'info-circle'} + ' me-2'"></i>
+    <span th:text="${message}">Alert message</span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+
+<!-- Stats Card Fragment -->
+<div class="col-md-3" th:fragment="statsCard(title, value, icon, colorClass)">
+    <div class="stats-card" th:style="${colorClass != null ? 'background: ' + colorClass : ''}">
+        <i th:class="'fas fa-' + ${icon} + ' fs-1 mb-3'"></i>
+        <h3 th:text="${value}">0</h3>
+        <p class="mb-0" th:text="${title}">Stat Title</p>
+    </div>
+</div>
+
+<!-- Action Button Fragment -->
+<button th:fragment="actionButton(text, icon, style, onclick, modalTarget)" 
+        th:class="'btn btn-' + ${style ?: 'primary'}" 
+        th:onclick="${onclick}"
+        th:attr="data-bs-toggle=${modalTarget != null ? 'modal' : null}, data-bs-target=${modalTarget != null ? '#' + modalTarget : null}">
+    <i th:class="'fas fa-' + ${icon} + ' me-1'" th:if="${icon != null}"></i>
+    <span th:text="${text}">Button Text</span>
+</button>
+
+<!-- Loading Spinner Fragment -->
+<div th:fragment="loadingSpinner(text)" class="text-center p-4">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2 text-muted" th:text="${text ?: 'Loading...'}">Loading...</p>
+</div>
+
+<!-- Empty State Fragment -->
+<div th:fragment="emptyState(icon, message, description)" class="text-center text-muted py-5">
+    <i th:class="'fas fa-' + ${icon} + ' fs-1 mb-3'"></i>
+    <h5 th:text="${message}">No data found</h5>
+    <p th:text="${description}" th:if="${description != null}">Description</p>
+</div>
+
+<!-- Status Badge Fragment -->
+<span th:fragment="statusBadge(status, text)" 
+      th:class="'badge ' + ${status == 'success' ? 'bg-success' : (status == 'warning' ? 'bg-warning text-dark' : (status == 'danger' ? 'bg-danger' : 'bg-info'))}"
+      th:text="${text}">
+    Status
+</span>
+
+<!-- Card Component Fragment -->
+<div th:fragment="card(title, icon, body, headerClass)" class="card">
+    <div th:class="'card-header ' + (${headerClass} ?: 'bg-light')" th:if="${title != null}">
+        <h5 class="card-title mb-0">
+            <i th:class="'fas fa-' + ${icon} + ' me-2'" th:if="${icon != null}"></i>
+            <span th:text="${title}">Card Title</span>
+        </h5>
+    </div>
+    <div class="card-body" th:if="${body != null}">
+        <th:block th:utext="${body}"></th:block>
+    </div>
+</div>
+
+<!-- Form Input Group Fragment -->
+<div th:fragment="inputGroup(id, label, type, placeholder, required, icon)" class="mb-3">
+    <label th:for="${id}" class="form-label">
+        <i th:class="'fas fa-' + ${icon} + ' me-1'" th:if="${icon != null}"></i>
+        <span th:text="${label}">Label</span>
+    </label>
+    <input th:id="${id}" 
+           th:name="${id}"
+           th:type="${type ?: 'text'}" 
+           class="form-control"
+           th:placeholder="${placeholder}"
+           th:required="${required == true}" />
+</div>
+
+<!-- Select Group Fragment -->
+<div th:fragment="selectGroup(id, label, options, required, icon)" class="mb-3">
+    <label th:for="${id}" class="form-label">
+        <i th:class="'fas fa-' + ${icon} + ' me-1'" th:if="${icon != null}"></i>
+        <span th:text="${label}">Label</span>
+    </label>
+    <select th:id="${id}" th:name="${id}" class="form-select" th:required="${required == true}">
+        <option value="">Select an option</option>
+        <option th:each="option : ${options}" th:value="${option.value}" th:text="${option.text}">Option</option>
+    </select>
+</div>
+
+<!-- Table Fragment -->
+<div th:fragment="dataTable(tableId, headers, rows, noDataMessage)" class="table-responsive">
+    <table th:id="${tableId}" class="table table-hover" th:if="${rows != null and !rows.isEmpty()}">
+        <thead class="table-dark">
+            <tr>
+                <th th:each="header : ${headers}" th:text="${header}">Header</th>
+            </tr>
+        </thead>
+        <tbody th:utext="${rows}">
+            <!-- Table rows will be inserted here -->
+        </tbody>
+    </table>
+    <div th:unless="${rows != null and !rows.isEmpty()}" 
+         th:replace="~{fragments/common :: emptyState('table', ${noDataMessage ?: 'No data available'}, null)}">
+    </div>
+</div>
+
+<!-- Modal Header Fragment -->
+<div th:fragment="modalHeader(title, closeButton)" class="modal-header">
+    <h5 class="modal-title" th:text="${title}">Modal Title</h5>
+    <button type="button" 
+            th:class="${closeButton != false ? 'btn-close btn-close-white' : 'btn-close'}"
+            data-bs-dismiss="modal" 
+            th:if="${closeButton != false}">
+    </button>
+</div>
+
+<!-- Modal Footer Fragment -->
+<div th:fragment="modalFooter(cancelText, submitText, submitStyle)" class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" 
+            th:text="${cancelText ?: 'Cancel'}">Cancel</button>
+    <button type="submit" th:class="'btn btn-' + (${submitStyle} ?: 'primary')" 
+            th:text="${submitText ?: 'Save'}">Save</button>
+</div>
+
+<!-- Search Filter Fragment -->
+<div th:fragment="searchFilter(searchId, filterSelects)" class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" 
+                           class="form-control" 
+                           th:id="${searchId}"
+                           placeholder="Search..." />
+                </div>
+            </div>
+            <th:block th:each="filter : ${filterSelects}" th:if="${filterSelects != null}">
+                <div class="col-md-3 mb-3">
+                    <select th:id="${filter.id}" class="form-select">
+                        <option value="" th:text="${filter.placeholder}">All Items</option>
+                        <option th:each="option : ${filter.options}" 
+                                th:value="${option.value}" 
+                                th:text="${option.text}">Option</option>
+                    </select>
+                </div>
+            </th:block>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination Fragment -->
+<nav th:fragment="pagination(currentPage, totalPages, baseUrl)" aria-label="Page navigation" th:if="${totalPages > 1}">
+    <ul class="pagination justify-content-center">
+        <li class="page-item" th:classappend="${currentPage <= 1} ? 'disabled'">
+            <a class="page-link" th:href="${baseUrl + '?page=' + (currentPage - 1)}">Previous</a>
+        </li>
+        <li th:each="page : ${#numbers.sequence(1, totalPages)}" 
+            class="page-item" 
+            th:classappend="${page == currentPage} ? 'active'">
+            <a class="page-link" th:href="${baseUrl + '?page=' + page}" th:text="${page}">1</a>
+        </li>
+        <li class="page-item" th:classappend="${currentPage >= totalPages} ? 'disabled'">
+            <a class="page-link" th:href="${baseUrl + '?page=' + (currentPage + 1)}">Next</a>
+        </li>
+    </ul>
+</nav>
+
+</body>
+</html>

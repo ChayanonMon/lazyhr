@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<!-- Leave Balance Cards Component -->
+<div th:fragment="leaveBalances(leaveBalance)" class="row mb-4">
+    <div class="col-md-3">
+        <div class="leave-balance annual-leave">
+            <h5>Annual Leave</h5>
+            <h3 th:text="${leaveBalance?.annualLeaveUsed ?: 0} + '/' + ${leaveBalance?.annualLeaveAllocated ?: 21}">
+                0/21
+            </h3>
+            <small>Days Used/Total</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="leave-balance sick-leave">
+            <h5>Sick Leave</h5>
+            <h3 th:text="${leaveBalance?.sickLeaveUsed ?: 0} + '/' + ${leaveBalance?.sickLeaveAllocated ?: 14}">
+                0/14
+            </h3>
+            <small>Days Used/Total</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="leave-balance special-leave">
+            <h5>Special Leave</h5>
+            <h3>0/7</h3>
+            <small>Days Used/Total</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="leave-balance" style="background: linear-gradient(135deg, #6f42c1 0%, #9333ea 100%); color: white;">
+            <h5>Personal Leave</h5>
+            <h3 th:text="${leaveBalance?.privateLeaveUsed ?: 0} + '/' + ${leaveBalance?.privateLeaveAllocated ?: 5}">
+                0/5
+            </h3>
+            <small>Days Used/Total</small>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Requests Table Component -->
+<div th:fragment="leaveRequestsTable(leaveRequests)" class="card">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>Your Leave Requests
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" th:if="${leaveRequests != null && !leaveRequests.isEmpty()}">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Category</th>
+                        <th>Period</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Days</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="leave : ${leaveRequests}">
+                        <td th:text="${leave.category}">Annual</td>
+                        <td th:text="${leave.period}">Full Day</td>
+                        <td th:text="${leave.startDate}">2024-01-15</td>
+                        <td th:text="${leave.endDate}">2024-01-17</td>
+                        <td th:text="${leave.totalDays}">3</td>
+                        <td>
+                            <span th:class="'badge ' + (${leave.status} == 'APPROVED' ? 'bg-success' : 
+                                             (${leave.status} == 'PENDING' ? 'bg-warning text-dark' : 
+                                             (${leave.status} == 'REJECTED' ? 'bg-danger' : 'bg-info')))"
+                                  th:text="${leave.status}">Pending</span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary me-1" 
+                                    th:onclick="'editLeave(' + ${leave.id} + ')'"
+                                    th:if="${leave.status == 'PENDING'}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" 
+                                    th:onclick="'cancelLeave(' + ${leave.id} + ')'"
+                                    th:if="${leave.status == 'PENDING'}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div th:unless="${leaveRequests != null && !leaveRequests.isEmpty()}" 
+                 th:replace="~{fragments/common :: emptyState('calendar-alt', 'No leave requests found', 'Apply for leave to see your requests here')}">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Application Modal Component -->
+<div th:fragment="leaveApplicationModal(userId)" class="modal fade" id="applyLeaveModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div th:replace="~{fragments/common :: modalHeader('Apply for Leave', true)}"></div>
+            <form id="leaveForm" th:action="@{/api/leave/apply}" method="post">
+                <input type="hidden" id="leaveId" name="leaveId" />
+                <input type="hidden" id="userId" name="userId" th:value="${userId}" />
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div th:replace="~{fragments/common :: selectGroup('leaveCategory', 'Leave Category', 
+                                ${[{value: 'ANNUAL', text: 'Annual Leave'}, 
+                                   {value: 'PRIVATE', text: 'Private Leave'}, 
+                                   {value: 'SICK', text: 'Sick Leave'}, 
+                                   {value: 'SPECIAL_HOLIDAY', text: 'Special Holiday'}]}, 
+                                true, 'calendar-alt')}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div th:replace="~{fragments/common :: selectGroup('leavePeriod', 'Leave Period', 
+                                ${[{value: 'FULL_DAY', text: 'Full Day'}, 
+                                   {value: 'AM', text: 'Morning (AM)'}, 
+                                   {value: 'PM', text: 'Afternoon (PM)'}]}, 
+                                true, 'clock')}"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div th:replace="~{fragments/common :: inputGroup('startDate', 'Start Date', 'date', null, true, 'calendar')}"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div th:replace="~{fragments/common :: inputGroup('endDate', 'End Date', 'date', null, true, 'calendar')}"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">
+                            <i class="fas fa-comment me-1"></i>Reason
+                        </label>
+                        <textarea id="reason" name="reason" class="form-control" rows="3" 
+                                  placeholder="Please provide reason for leave..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="managerComment" class="form-label">
+                            <i class="fas fa-user-tie me-1"></i>Additional Notes
+                        </label>
+                        <textarea id="managerComment" name="managerComment" class="form-control" rows="2" 
+                                  placeholder="Any additional information for your manager..."></textarea>
+                    </div>
+                </div>
+                <div th:replace="~{fragments/common :: modalFooter('Cancel', 'Apply for Leave', 'primary')}"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Summary Cards for Dashboard -->
+<div th:fragment="leaveSummaryCard(leaveBalance)" class="card">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-calendar-alt me-2"></i>Leave Management
+        </h5>
+    </div>
+    <div class="card-body">
+        <div th:if="${leaveBalance}" class="mb-3">
+            <div class="row text-center">
+                <div class="col-4">
+                    <small class="text-muted">Annual</small><br />
+                    <strong th:text="${leaveBalance.annualLeaveRemaining}">15</strong>
+                </div>
+                <div class="col-4">
+                    <small class="text-muted">Sick</small><br />
+                    <strong th:text="${leaveBalance.sickLeaveRemaining}">12</strong>
+                </div>
+                <div class="col-4">
+                    <small class="text-muted">Private</small><br />
+                    <strong th:text="${leaveBalance.privateLeaveRemaining}">3</strong>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-grid gap-2">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#leaveModal">
+                <i class="fas fa-plus me-1"></i>Apply Leave
+            </button>
+            <a href="/lazyhr/leave" class="btn btn-outline-info">
+                <i class="fas fa-list me-1"></i>View Requests
+            </a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

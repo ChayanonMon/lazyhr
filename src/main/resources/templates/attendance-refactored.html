@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Attendance Management - LazyHR</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/lazyhr/css/common.css" />
+    <link rel="stylesheet" href="/lazyhr/css/attendance.css" />
+  </head>
+  <body>
+    <!-- Sidebar using fragment -->
+    <div th:replace="~{fragments/sidebar :: sidebar('attendance', ${user})}"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="container-fluid p-4">
+        <!-- Header using fragment -->
+        <div th:replace="~{fragments/common :: pageHeader('Attendance Management', 'Manage your daily attendance and view records', null)}"></div>
+
+        <!-- Error Alert using fragment -->
+        <div th:replace="~{fragments/common :: alert('danger', ${error}, 'exclamation-triangle')}" th:if="${error}"></div>
+
+        <!-- Clock In/Out and Today's Summary using fragments -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div th:replace="~{fragments/attendance :: clockInOut(${user?.id}, ${hasUser}, 'currentTime', 'currentDate', ${activeAttendance})}"></div>
+          </div>
+          <div class="col-md-6">
+            <div th:replace="~{fragments/attendance :: todaysSummary(${todayAttendances})}"></div>
+          </div>
+        </div>
+
+        <!-- Monthly Attendance Table using fragment -->
+        <div class="row">
+          <div class="col-12">
+            <div th:replace="~{fragments/attendance :: monthlyAttendance(${monthlyAttendance})}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/lazyhr/js/constants.js"></script>
+    <script src="/lazyhr/js/common-utils.js"></script>
+    <script src="/lazyhr/js/ui-components.js"></script>
+    <script src="/lazyhr/js/attendance.js"></script>
+    <script th:inline="javascript">
+      // Initialize user data from Thymeleaf template
+      document.addEventListener("DOMContentLoaded", function() {
+        const userId = /*[[${user != null ? user.id : 0}]]*/ 0;
+        const hasUser = /*[[${hasUser != null ? hasUser : false}]]*/ false;
+        initializeUserData(userId, hasUser);
+        
+        // Initialize UI components for attendance page
+        UIComponents.Table.init('attendanceTable', {
+          sortable: true,
+          hoverable: true
+        });
+      });
+    </script>
+  </body>
+</html>

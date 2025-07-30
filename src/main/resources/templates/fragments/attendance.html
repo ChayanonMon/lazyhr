@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<!-- Clock In/Out Component -->
+<div th:fragment="clockInOut(userId, hasUser, currentTime, currentDate, activeAttendance)" class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-stopwatch me-2"></i>Clock In/Out
+        </h5>
+    </div>
+    <div class="card-body text-center">
+        <div th:id="${currentTime ?: 'currentTime'}" class="time-display mb-3">--:--:--</div>
+        <div class="mb-3">
+            <span class="badge bg-info fs-6" th:id="${currentDate ?: 'currentDate'}">Today</span>
+        </div>
+
+        <div th:if="${hasUser != null and hasUser == true and userId != null}" class="d-grid gap-2">
+            <button class="btn btn-success btn-clock" onclick="clockIn()" 
+                    th:disabled="${activeAttendance != null}">
+                <i class="fas fa-sign-in-alt me-1"></i>Clock In
+            </button>
+            <button class="btn btn-danger btn-clock" onclick="clockOut()"
+                    th:disabled="${activeAttendance == null}">
+                <i class="fas fa-sign-out-alt me-1"></i>Clock Out
+            </button>
+        </div>
+
+        <div th:if="${hasUser == null or hasUser == false or userId == null}" class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            No user information available. Please contact administrator.
+        </div>
+
+        <!-- Current Status -->
+        <div th:if="${activeAttendance != null}" class="mt-3">
+            <small class="text-muted">Clocked in at: </small>
+            <strong th:text="${activeAttendance.clockInTime}">09:00</strong>
+        </div>
+    </div>
+</div>
+
+<!-- Today's Summary Component -->
+<div th:fragment="todaysSummary(todayAttendances)" class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-calendar-day me-2"></i>Today's Summary
+        </h5>
+    </div>
+    <div class="card-body">
+        <div th:if="${todayAttendances != null && !todayAttendances.isEmpty()}">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Clock In</th>
+                            <th>Clock Out</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="attendance : ${todayAttendances}">
+                            <td th:text="${attendance.clockInTime}">09:00</td>
+                            <td th:text="${attendance.clockOutTime ?: '-'}">17:00</td>
+                            <td>
+                                <span th:replace="~{fragments/common :: statusBadge(${attendance.status.name().toLowerCase()}, ${attendance.status})}"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div th:unless="${todayAttendances != null && !todayAttendances.isEmpty()}" 
+             th:replace="~{fragments/common :: emptyState('clock', 'No attendance record for today', null)}">
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Attendance Table Component -->
+<div th:fragment="monthlyAttendance(monthlyAttendance)" class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-calendar me-2"></i>This Month's Attendance
+        </h5>
+    </div>
+    <div class="card-body">
+        <div th:if="${monthlyAttendance != null && !monthlyAttendance.isEmpty()}" class="table-responsive">
+            <table class="table table-hover" data-timestamp="true">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Date</th>
+                        <th>Clock In</th>
+                        <th>Clock Out</th>
+                        <th>Total Hours</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="attendance : ${monthlyAttendance}" 
+                        th:class="'attendance-card ' + ${attendance.status.name().toLowerCase()}">
+                        <td th:text="${attendance.date}">2024-01-15</td>
+                        <td th:text="${attendance.clockInTime}">09:00</td>
+                        <td th:text="${attendance.clockOutTime ?: '-'}">17:00</td>
+                        <td th:text="${attendance.totalHours != null ? attendance.totalHours + 'h' : '-'}">8h</td>
+                        <td>
+                            <span th:class="'badge ' + (${attendance.status.name()} == 'PRESENT' ? 'bg-success' : 
+                                             (${attendance.status.name()} == 'LATE' ? 'bg-warning text-dark' : 
+                                             (${attendance.status.name()} == 'ABSENT' ? 'bg-danger' : 'bg-info')))"
+                                  th:text="${attendance.status}">Present</span>
+                        </td>
+                        <td th:text="${attendance.notes ?: '-'}">Good work</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div th:unless="${monthlyAttendance != null && !monthlyAttendance.isEmpty()}" 
+             th:replace="~{fragments/common :: emptyState('calendar-times', 'No attendance records found for this month', null)}">
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
